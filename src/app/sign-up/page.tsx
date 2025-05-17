@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { TriangleAlert } from "lucide-react";
 
 const SignUp = () => {
   const [form, setForm] = useState({
@@ -50,17 +51,16 @@ const SignUp = () => {
     }
   };
 
-  const handleProvider = (
-    event: React.MouseEvent<HTMLButtonElement>,
-    value: "github" | "google"
-  ) => {
-    event.preventDefault();
-    signIn(value, { callbackUrl: "/" });
-  };
   return (
     <div className="LOGIN">
       <div className="div">
         <div className="group">
+          {!!error && (
+            <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
+              <TriangleAlert />
+              <p>{error}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label
