@@ -12,7 +12,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-a;
 import { toast } from "sonner";
 import Image from "next/image";
 import { TriangleAlert } from "lucide-react";
@@ -43,13 +42,6 @@ const SignIn = () => {
     }
   };
 
-  const handleProvider = (
-    event: React.MouseEvent<HTMLButtonElement>,
-    value: "github" | "google"
-  ) => {
-    event.preventDefault();
-    signIn(value, { callbackUrl: "/" });
-  };
   return (
     <div>
       <div className="LOGIN">
