@@ -3,19 +3,15 @@
 //shadcn ui
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardDescription, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import Link from "next/link";
 
 //react icons
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { TriangleAlert } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 
@@ -69,7 +65,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="name"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                 Name
               </label>
               <Input
@@ -85,7 +81,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                 email
               </label>
               <Input
@@ -100,7 +96,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                 Password
               </label>
               <Input
@@ -115,7 +111,7 @@ const SignUp = () => {
             <div>
               <label
                 htmlFor="confirm_password"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                 Confirm Password
               </label>
               <Input
@@ -132,7 +128,7 @@ const SignUp = () => {
             </Button>
           </form>
           <Separator />
-          <p className="text-center text-sm mt-2 text-muted-foreground">
+          <p className="text-center mt-2 text-muted-foreground">
             Already have an account?
             <Link className="text-sky-700 ml-4 hover:underline cursor-pointer" href="sign-in">
               Sign in{" "}

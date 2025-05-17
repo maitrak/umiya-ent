@@ -3,20 +3,16 @@
 //shadcn ui
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardDescription, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 import Link from "next/link";
 
 //react icons
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { TriangleAlert } from "lucide-react";
 import Image from "next/image";
 
 const SignIn = () => {
@@ -61,7 +57,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                  className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                   Email
                 </label>
                 <Input
@@ -76,7 +72,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-lg">
+                  className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                   Password
                 </label>
                 <Input
@@ -93,7 +89,7 @@ const SignIn = () => {
               </Button>
             </form>
             <Separator />
-            <p className="text-center text-sm mt-2 text-muted-foreground">
+            <p className="text-center mt-2 text-muted-foreground">
               Create Account?
               <Link className="text-sky-700 ml-4 hover:underline cursor-pointer" href="sign-up">
                 Sign up{" "}
