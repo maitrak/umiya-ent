@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect } from "react";
 
-const UserButton = ({ getData }) => {
+const UserButton = ({ getData }: { getData?: any }) => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
