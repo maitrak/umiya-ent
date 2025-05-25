@@ -23,10 +23,10 @@ const Upload = () => {
   const [paymentMethod, setPaymentMethod] = React.useState("cash");
   const [data, setData] = React.useState(null);
   const [user, setUser] = React.useState(null);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   useEffect(() => {
-    console.log("user", user);
+    console.log("user", user, session, data);
   }, [user]);
 
   return (

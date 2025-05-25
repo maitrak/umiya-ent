@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose from "mongoose";
 
 const LedgerSchema = new mongoose.Schema(
   {

@@ -47,7 +47,7 @@ const handler = NextAuth({
     //   // Add custom data to session
     // //   session.user.id = token.sub; // Example: Add user ID from JWT tokenreturn session;
     // },
-    async signIn({ account, profile }) {
+    async signIn() {
       return true;
     },
 
