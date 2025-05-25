@@ -10,18 +10,10 @@ import {
 import { Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useEffect } from "react";
 
-const UserButton = ({ getData }: { getData?: any }) => {
+const UserButton = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
-
-  // Safely call getData only once when session loads
-  useEffect(() => {
-    if (typeof getData === "function" && session) {
-      getData(session.user); // send only the user object if that's what you want
-    }
-  }, [session, getData]);
 
   if (status === "loading") {
     return <Loader className="size-6 mr-4 mt-4 float-right animate-spin" />;
