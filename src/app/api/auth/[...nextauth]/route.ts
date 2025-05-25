@@ -53,20 +53,18 @@ const handler = NextAuth({
 
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.phone = user.phone;
-        token.role = user.role;
+        const customUser = user as typeof user & { phone: string; role: string };
+        token.id = customUser.id;
+        token.phone = customUser.phone;
+        token.role = customUser.role;
       }
       return token;
     },
     async session({ session, token }) {
-      console.log({ session, token });
-
       if (token) {
         session.user = {
-          phone: token.phone,
-          name: token.name,
-          role: token.role,
+          ...(session.user ?? {}),
+          ...(token ?? {}),
         };
       }
       return session;
