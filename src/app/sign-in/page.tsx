@@ -28,9 +28,10 @@ const SignIn = () => {
     setPending(true);
     const res = await signIn("credentials", {
       redirect: false,
-      email,
+      phone: email,
       password,
     });
+    console.log("res", res);
     if (res?.ok) {
       router.push("/");
       toast.success("login successful");
@@ -56,14 +57,14 @@ const SignIn = () => {
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label
-                  htmlFor="email"
+                  htmlFor="phoneNumber"
                   className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
-                  Email
+                  Phone Number
                 </label>
                 <Input
-                  type="email"
+                  type="number"
                   disabled={pending}
-                  placeholder="email"
+                  placeholder="Phone Number"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

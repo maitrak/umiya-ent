@@ -1,3 +1,5 @@
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -5,27 +7,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useEffect } from "react";
 
-const UserButton = () => {
+const UserButton = ({ getData }: any) => {
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  // Safely call getData only once when session loads
+  useEffect(() => {
+    if (typeof getData === "function" && session) {
+      getData(session.user); // send only the user object if that's what you want
+    }
+  }, [session, getData]);
 
   if (status === "loading") {
     return <Loader className="size-6 mr-4 mt-4 float-right animate-spin" />;
   }
 
   const avatarFallback = session?.user?.name?.charAt(0).toUpperCase();
-    const handleSignOut = async () => {
-        await signOut({
-            redirect: false,
-        });
-        router.push("/")
-}
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
+    router.push("/");
+  };
+
   return (
     <nav>
       {session ? (
@@ -38,14 +46,14 @@ const UserButton = () => {
                   className="size-10 hover:opacity-75 transition"
                   src={session.user?.image || undefined}
                 />
-                <AvatarFallback className="bg-sky-900 text-white">
-                  {avatarFallback}
-                </AvatarFallback>
+                <AvatarFallback className="bg-sky-900 text-white">{avatarFallback}</AvatarFallback>
               </Avatar>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" side="bottom" className="w-50">
-            <DropdownMenuItem className="h-10" onClick={()=>handleSignOut()}>Log out</DropdownMenuItem>
+            <DropdownMenuItem className="h-10" onClick={handleSignOut}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (

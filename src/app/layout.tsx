@@ -1,7 +1,10 @@
+// remove "use client"
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "next-auth/react";
+import SessionWrapper from "./SessionWrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,8 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Toaster />
-        {children}
+        <SessionWrapper>
+          <Toaster />
+          {children}
+        </SessionWrapper>
       </body>
     </html>
   );

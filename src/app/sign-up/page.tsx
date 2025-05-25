@@ -79,17 +79,19 @@ const SignUp = () => {
 
             <div>
               <label
-                htmlFor="email"
+                htmlFor="Phone Number"
                 className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
-                email
+                Phone Number
               </label>
               <Input
-                type="email"
+                type="number"
                 disabled={pending}
-                placeholder="email"
+                placeholder="Phone Number"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
+                maxLength={10}
+                minLength={10}
               />
             </div>
             <div>
