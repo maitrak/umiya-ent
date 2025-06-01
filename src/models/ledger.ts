@@ -1,6 +1,6 @@
 // models/Ledger.ts
 
-import mongoose, { Schema, model, models } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 // Define schema
 const LedgerSchema = new Schema(

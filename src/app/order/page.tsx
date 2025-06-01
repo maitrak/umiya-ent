@@ -4,7 +4,24 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 
-const PaymentMethod = ({ label, emoji, id, amount, multi, handleClick, handleChange, attr }) => {
+interface PaymentMethodProps {
+  label: string;
+  emoji: string; // Assuming emoji is a string (e.g., "💳" or a path to an image)
+  amount: number; // Assuming amount is a number
+  multi: boolean; // Assuming multi is a boolean
+  handleClick: (attr: string, label: string) => void; // Assuming handleClick takes a string ID and returns void
+  handleChange: (attr: string, event: string) => void; // Common for input changes
+  attr: string; // Optional: for other input attributes
+}
+const PaymentMethod: React.FC<PaymentMethodProps> = ({
+  label,
+  emoji,
+  amount,
+  multi,
+  handleClick,
+  handleChange,
+  attr,
+}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -55,8 +72,7 @@ interface AccordionState {
 
 export default function AccordionUI() {
   const [mainOpen, setMainOpen] = useState<AccordionState>({}); // <--- Apply the type here
-  const [ledgers, setLedgers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ledgers, setLedgers] = useState<any>({});
 
   useEffect(() => {
     const fetchLedgers = async () => {
@@ -64,14 +80,13 @@ export default function AccordionUI() {
         const res = await axios.get("/api/ledger");
         setLedgers(res.data.data[0]);
         let toggle = {};
-        res.data.data[0].Ledger_entries.map((entry: any, index: number) => {
+        res.data.data[0].Ledger_entries.map((entry: any) => {
           toggle = { ...toggle, [entry?._id]: false };
         });
         setMainOpen(toggle);
       } catch (err) {
         console.error("Error fetching ledgers:", err);
       } finally {
-        setLoading(false);
       }
     };
 
@@ -79,8 +94,6 @@ export default function AccordionUI() {
   }, []);
 
   const handleOpen = async (id: string) => {
-    console.log("ledgers", ledgers.Ledger_entries);
-
     setMainOpen({ ...mainOpen, [id]: !mainOpen[id] });
   };
 
@@ -111,8 +124,8 @@ export default function AccordionUI() {
 
         {/* Bill Row */}
         {ledgers?.Ledger_entries &&
-          ledgers?.Ledger_entries.map((entry: any, index: number) => (
-            <div className="relative">
+          ledgers?.Ledger_entries.map((entry: any) => (
+            <div className="relative" key={entry?._id}>
               <div
                 className="grid grid-cols-4 items-start text-sm bg-gray-200 p-2 cursor-pointer"
                 onClick={() => handleOpen(entry?._id)}>
@@ -151,7 +164,6 @@ export default function AccordionUI() {
                   <PaymentMethod
                     label="Cash"
                     emoji="💵"
-                    id="cash"
                     amount={entry?.pending}
                     multi={false}
                     handleClick={handleClick}
@@ -161,7 +173,6 @@ export default function AccordionUI() {
                   <PaymentMethod
                     label="UPI"
                     emoji="📱"
-                    id="upi"
                     amount={entry?.pending}
                     multi={false}
                     handleClick={handleClick}
@@ -171,7 +182,6 @@ export default function AccordionUI() {
                   <PaymentMethod
                     label="Cheque"
                     emoji="🏦"
-                    id="cheque"
                     amount={entry?.pending}
                     multi={true}
                     handleClick={handleClick}

@@ -1,13 +1,13 @@
 "use client";
-import { SessionProvider, useSession } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 import { Paper, Typography, Button } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
-type ExcelRow = { [key: string]: any };
+type ExcelRow = Record<string, string | number | null>;
 const Upload = () => {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<any>({});
 
   const handleFile = async (e: any) => {
     const file = e.target.files[0];
@@ -76,8 +76,8 @@ const Upload = () => {
       try {
         const errorData = await res.json();
         console.error("Error details:", errorData);
-      } catch (e) {
-        console.error("Could not parse error response as JSON.");
+      } catch (e: any) {
+        console.error("Could not parse error response as JSON.", e);
       }
     }
   };

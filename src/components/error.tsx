@@ -1,8 +1,11 @@
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import Link from "next/link";
 
-const ErrorPage401 = ({ children }: any) => {
+const ErrorPage401 = ({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) => {
   const router = useRouter();
 
   setTimeout(() => {

@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation"; // ✅ CORRECT
 import React from "react";
 
 const Home = () => {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
 
-  if (session?.user?.role == "ADMIN") {
-    router.push("/admin/upload"); // or any route
-  } else if (session?.user?.role == "SALESMAN") {
+  if ((session?.user as any)?.role === "ADMIN") {
+    router.push("/admin/upload");
+  } else if ((session?.user as any)?.role == "SALESMAN") {
     router.push("/order"); // or any route
   } else {
     return (
