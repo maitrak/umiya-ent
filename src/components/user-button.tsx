@@ -51,10 +51,10 @@ const UserButton = () => {
       ) : (
         <div className="flex justify-end p-4 gap-4">
           <Button>
-            <Link href="sign-in">Sign in</Link>
+            <Link href="/sign-in">Sign in</Link>
           </Button>
           <Button>
-            <Link href="sign-up">Sign up</Link>
+            <Link href="/sign-up">Sign up</Link>
           </Button>
         </div>
       )}

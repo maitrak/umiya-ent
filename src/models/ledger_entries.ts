@@ -1,6 +1,8 @@
-import mongoose from "mongoose";
+// models/Ledger.ts
 
-const LedgerSchema = new mongoose.Schema(
+import { Schema, model, models } from "mongoose";
+
+const LedgerEntriesSchema = new Schema(
   {
     user: {
       type: Number,
@@ -30,18 +32,19 @@ const LedgerSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    transactionNo: {
+    sales_man: {
       type: String,
       required: false,
     },
-    transactionAmount: {
-      type: String,
-      required: false,
+    ledger_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Ledger",
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-const User = mongoose.models.User || mongoose.model("Ledger_entries", LedgerSchema);
+const LedgerEntries = models.LedgerEntries || model("Ledger_entries", LedgerEntriesSchema);
 
-export default User;
+export default LedgerEntries;

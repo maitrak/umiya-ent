@@ -12,7 +12,7 @@ async function connectToDatabase() {
     return mongoose;
   }
   const opts = {
-    bufferCommands: false,
+    // bufferCommands: false,
   };
   await mongoose.connect(MONGODB_URI!, opts);
   return mongoose;
