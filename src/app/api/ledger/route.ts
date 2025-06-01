@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     for (const entry of body) {
       console.log({
-        amount: entry?.["Bill Amount"] ? entry["Bill Amount"] : 0,
+        amount: 0,
         pending: entry?.["Pending Amount"] ? entry["Pending Amount"] : 0,
         billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
         party: entry?.["Party"] ? entry["Party"] : "",
@@ -67,7 +67,12 @@ export async function GET() {
   try {
     await connectToDatabase();
     let ledgerWithEntries = [];
-    ledgerWithEntries = await Ledger.find().populate("Ledger_entries");
+    ledgerWithEntries = await Ledger.find().populate({
+      path: "Ledger_entries",
+      populate: {
+        path: "Ledger_entries_transaction",
+      },
+    });
     return NextResponse.json({
       success: true,
       data: ledgerWithEntries,

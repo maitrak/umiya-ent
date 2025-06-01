@@ -45,6 +45,14 @@ const LedgerEntriesSchema = new Schema(
   { timestamps: true }
 );
 
-const LedgerEntries = models.LedgerEntries || model("Ledger_entries", LedgerEntriesSchema);
+LedgerEntriesSchema.virtual("Ledger_entries_transaction", {
+  ref: "Ledger_entries_transaction", // model name of child
+  localField: "_id", // primary key on Ledger
+  foreignField: "ledger_entries_id", // foreign key on LedgerEntries
+});
+
+LedgerEntriesSchema.set("toObject", { virtuals: true });
+LedgerEntriesSchema.set("toJSON", { virtuals: true });
+const LedgerEntries = models.Ledger_entries || model("Ledger_entries", LedgerEntriesSchema);
 
 export default LedgerEntries;

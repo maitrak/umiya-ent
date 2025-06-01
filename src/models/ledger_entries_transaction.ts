@@ -3,7 +3,7 @@ import { Schema, model, models } from "mongoose";
 const LedgerEntriesTransactionSchema = new Schema(
   {
     type: {
-      type: Number,
+      type: String,
       required: true,
     },
     amount: {
@@ -19,7 +19,7 @@ const LedgerEntriesTransactionSchema = new Schema(
       required: false,
     },
     ledger_entries_id: {
-      type: Number,
+      type: Schema.Types.ObjectId,
       required: true,
     },
   },
@@ -28,7 +28,7 @@ const LedgerEntriesTransactionSchema = new Schema(
 
 // This prevents model overwrite errors during hot-reloading
 const LedgerEntriesTransaction =
-  models.LedgerEntriesTransaction ||
+  models.Ledger_entries_transaction ||
   model("Ledger_entries_transaction", LedgerEntriesTransactionSchema);
 
 export default LedgerEntriesTransaction;
