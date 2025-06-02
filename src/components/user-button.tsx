@@ -10,8 +10,8 @@ import { useSession } from "next-auth/react";
 //   DropdownMenuTrigger,
 // } from "@/components/ui/dropdown-menu";
 import { Loader } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+// import { Button } from "@/components/ui/button";
+// import Link from "next/link";
 
 const UserButton = () => {
   // const router = useRouter();
@@ -54,14 +54,15 @@ const UserButton = () => {
         // )
         <></>
       ) : (
-        <div className="flex justify-end p-4 gap-4">
-          <Button>
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
-          <Button>
-            <Link href="/sign-up">Sign up</Link>
-          </Button>
-        </div>
+        <></>
+        // <div className="flex justify-end p-4 gap-4">
+        //   <Button>
+        //     <Link href="/sign-in">Sign in</Link>
+        //   </Button>
+        //   <Button>
+        //     <Link href="/sign-up">Sign up</Link>
+        //   </Button>
+        // </div>
       )}
     </nav>
   );

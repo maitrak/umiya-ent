@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation"; // ✅ CORRECT
 import React from "react";
+import Link from "next/link";
 
 const Home = () => {
   const { data: session } = useSession();
@@ -17,7 +18,9 @@ const Home = () => {
       <div>
         <div className="LOGIN">
           <div className="div">
-            <Image src="/logo.jpg" alt="Next.js logo" width={700} height={700} priority />
+            <Link href="/sign-in">
+              <Image src="/logo.jpg" alt="Next.js logo" width={700} height={700} priority />
+            </Link>
           </div>
         </div>
       </div>
