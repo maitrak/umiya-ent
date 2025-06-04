@@ -66,7 +66,18 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     await connectToDatabase();
-    const ledgerWithEntries = await Ledger.find().populate({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to the beginning of today
+
+    // Get tomorrow's date
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const ledgerWithEntries = await Ledger.find({
+      created_at: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    }).populate({
       path: "Ledger_entries",
       populate: {
         path: "Ledger_entries_transaction",
