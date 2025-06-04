@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "sonner";
@@ -10,7 +10,13 @@ interface PaymentMethodProps {
   emoji: string; // Assuming emoji is a string (e.g., "💳" or a path to an image)
   amount: string; // Assuming amount is a number
   multi: boolean; // Assuming multi is a boolean
-  handleClick: (attr: string, label: string, amount: string, ispos: boolean) => void; // Assuming handleClick takes a string ID and returns void
+  handleClick: (
+    attr: string,
+    label: string,
+    amount: string,
+    ispos: boolean,
+    transaction?: any
+  ) => void; // Assuming handleClick takes a string ID and returns void
   attr: string; // Optional: for other input attributes
   data?: any;
 }
@@ -25,7 +31,9 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [amountSettle, setAmount] = useState(amount);
-  const [payload, setPayload] = useState(null);
+  const [payload, setPayload] = useState<Record<string, any> | null>(null);
+  const [cheque, setCheque] = useState("");
+
   const handleAmount = (value: string) => {
     if (value > amount) {
       toast.error("Amount is greater than the amount in the ledger");
@@ -44,10 +52,12 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   }, [data]);
 
   const handleCheck = (e: any) => {
+    console.log("cheque", cheque);
+
     if (e) {
-      handleClick(attr, label, amountSettle, true);
+      handleClick(attr, label, amountSettle, true, cheque == "" ? null : cheque);
     } else {
-      handleClick(attr, label, amountSettle, false);
+      handleClick(attr, label, amountSettle, false, cheque == "" ? null : cheque);
     }
   };
   return (
@@ -82,6 +92,9 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
               type="text"
               className="w-full border rounded px-2 py-1 text-sm"
               placeholder="Transaction No."
+              value={payload?.transactionNo}
+              disabled={!!payload?.transactionNo}
+              onChange={(e) => setCheque(e.target.value)}
             />
           )}
           <input
@@ -106,31 +119,33 @@ export default function AccordionUI() {
   const [ledgers, setLedgers] = useState<any>({});
 
   useEffect(() => {
-    const fetchLedgers = async () => {
-      try {
-        const res = await axios.get("/api/ledger");
-        setLedgers(res.data.data[0]);
-        let toggle = {};
-        console.log(res.data.data);
-
-        res.data.data.Ledger_entries.map((entry: any) => {
-          toggle = { ...toggle, [entry?._id]: false };
-        });
-        setMainOpen(toggle);
-      } catch (err) {
-        console.error("Error fetching ledgers:", err);
-      } finally {
-      }
-    };
-
     fetchLedgers();
   }, []);
+  const fetchLedgers = async () => {
+    try {
+      const res = await axios.get("/api/ledger");
+      setLedgers(res.data.data[0]);
+      let toggle = {};
+      console.log(res.data.data);
 
+      res.data.data.Ledger_entries.map((entry: any) => {
+        toggle = { ...toggle, [entry?._id]: false };
+      });
+      setMainOpen(toggle);
+    } catch (err) {
+      console.error("Error fetching ledgers:", err);
+    } finally {
+    }
+  };
   const handleOpen = async (id: string) => {
     setMainOpen({ ...mainOpen, [id]: !mainOpen[id] });
   };
 
-  const handleClick = async (id: any, label: any, amount: any, ispos: boolean) => {
+  useEffect(() => {
+    console.log("=>>>>>>>>>>>", ledgers);
+  }, [ledgers]);
+
+  const handleClick = async (id: any, label: any, amount: any, ispos: boolean, cheque: string) => {
     setLedgers((prev: any) => ({
       ...prev,
       Ledger_entries: prev.Ledger_entries.map((entry: any) => {
@@ -140,18 +155,38 @@ export default function AccordionUI() {
           ? {
               ...entry,
               amount: ispos ? total + found : total - found,
-              ...(ispos ? { transaction: { label, id, amount } } : { transaction: {} }),
+              ...handlemayBeSaved(entry, label, id, amount, ispos, cheque),
             }
           : entry;
       }),
     }));
   };
 
-  const handleCheck = (e: any, attr: any, label: any, amountSettle: any) => {
+  const handlemayBeSaved = (
+    entry: any,
+    label: any,
+    id: any,
+    amount: any,
+    ispos: any,
+    cheque: string
+  ) => {
+    const found = entry?.transaction ?? [];
+    const out = found.filter((el: any) => el.label !== label);
+    console.log({ found, out });
+
+    console.log(
+      ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out }
+    );
+
+    // entry?.transaction;
+    return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
+  };
+
+  const handleCheck = (e: any, attr: any, label: any, amountSettle: any, cheque: any) => {
     if (e) {
-      handleClick(attr, label, amountSettle, true);
+      handleClick(attr, label, amountSettle, true, cheque);
     } else {
-      handleClick(attr, label, amountSettle, false);
+      handleClick(attr, label, amountSettle, false, cheque);
     }
   };
 
@@ -160,8 +195,9 @@ export default function AccordionUI() {
     await fetch("/api/transaction/" + id, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: payload.transaction.label, amount: payload.transaction.amount }),
+      body: JSON.stringify(payload.transaction),
     });
+    await fetchLedgers();
   };
 
   return (
@@ -260,7 +296,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry?._id, "credit", entry?.pending)
+                        handleCheck(e.target.checked, entry?._id, "credit", entry?.pending, null)
                       }
                     />
                     <span>✉️ CREDIT</span>
@@ -269,7 +305,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry?._id, "cancel", entry?.pending)
+                        handleCheck(e.target.checked, entry?._id, "cancel", entry?.pending, null)
                       }
                     />
                     <span>

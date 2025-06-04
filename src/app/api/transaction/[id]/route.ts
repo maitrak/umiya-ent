@@ -28,12 +28,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     const body = await req.json();
-    await LedgerEntriesTransaction.create({
-      ledger_entries_id: params.id,
-      type: body.type,
-      amount: body.amount,
-    });
-    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount: body.amount } });
+    let amount = 0;
+    for (const data of body) {
+      await LedgerEntriesTransaction.create({
+        ledger_entries_id: params.id,
+        type: data.label,
+        amount: +data.amount,
+        transactionNo: data.cheque,
+      });
+      amount += +data.amount;
+    }
+    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount } });
     return NextResponse.json({
       success: true,
       data: body,
