@@ -184,7 +184,9 @@ export default function AccordionUI() {
     <div className="bg-white p-2 sm:p-4 font-sans min-h-screen">
       <div className="w-full sm:max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
         <div className="bg-blue-600 text-white text-center py-2 font-semibold text-lg">
-          {ledgers?.date ? moment(ledgers.date).format("DD-MM-YYYY") : ""}
+          {ledgers?.date
+            ? moment(ledgers.date).format("DD-MM-YYYY")
+            : moment().format("DD-MM-YYYY")}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 text-[10px] sm:text-xs font-bold border-b text-center bg-white">
@@ -297,6 +299,16 @@ export default function AccordionUI() {
               )}
             </div>
           ))}
+        {console.log(ledgers?.Ledger_entries?.length)}
+        {ledgers?.Ledger_entries?.length == 0 || ledgers?.Ledger_entries?.length == undefined ? (
+          <div className="flex items-center justify-center min-h-[200px] w-full">
+            <p className="text-3xl text-gray-500 p-8 border border-gray-300 rounded-lg bg-gray-50 text-center font-semibold">
+              No Data Available
+            </p>
+          </div>
+        ) : (
+          <> </>
+        )}
       </div>
     </div>
   );
