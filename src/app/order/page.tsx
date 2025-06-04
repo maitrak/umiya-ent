@@ -116,7 +116,7 @@ export default function AccordionUI() {
     fetchLedgers();
   }, []);
 
-  const fetchLedgers = async () => {
+  const fetchLedgers = async (first = true) => {
     try {
       const res = await axios.get("/api/ledger");
       setLedgers(res.data.data[0]);
@@ -124,7 +124,9 @@ export default function AccordionUI() {
       res.data.data[0].Ledger_entries.forEach((entry: any) => {
         toggle[entry._id] = false;
       });
-      setMainOpen(toggle);
+      if (first) {
+        setMainOpen(toggle);
+      }
     } catch (err) {
       console.error("Error fetching ledgers:", err);
     }
@@ -175,7 +177,7 @@ export default function AccordionUI() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload.transaction),
     });
-    await fetchLedgers();
+    await fetchLedgers(false);
   };
 
   return (

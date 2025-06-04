@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Schema, model, models } from "mongoose";
+import { Schema } from "mongoose";
 
 const LedgerEntriesTransactionSchema = new Schema(
   {
