@@ -81,7 +81,7 @@ const SignUp = () => {
               <label
                 htmlFor="Phone Number"
                 className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
-                Phone Number
+                User ID
               </label>
               <Input
                 type="number"

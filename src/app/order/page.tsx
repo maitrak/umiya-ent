@@ -7,13 +7,20 @@ import { toast } from "sonner";
 
 interface PaymentMethodProps {
   label: string;
-  emoji: string; // Assuming emoji is a string (e.g., "💳" or a path to an image)
-  amount: string; // Assuming amount is a number
-  multi: boolean; // Assuming multi is a boolean
-  handleClick: (attr: string, label: string, amount: string, ispos: boolean) => void; // Assuming handleClick takes a string ID and returns void
-  attr: string; // Optional: for other input attributes
+  emoji: string;
+  amount: string;
+  multi: boolean;
+  handleClick: (
+    attr: string,
+    label: string,
+    amount: string,
+    ispos: boolean,
+    transaction?: any
+  ) => void;
+  attr: string;
   data?: any;
 }
+
 const PaymentMethod: React.FC<PaymentMethodProps> = ({
   label,
   emoji,
@@ -25,9 +32,11 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [amountSettle, setAmount] = useState(amount);
-  const [payload, setPayload] = useState(null);
+  const [payload, setPayload] = useState<Record<string, any> | null>(null);
+  const [cheque, setCheque] = useState("");
+
   const handleAmount = (value: string) => {
-    if (value > amount) {
+    if (Number(value) > Number(amount)) {
       toast.error("Amount is greater than the amount in the ledger");
     } else {
       setAmount(value);
@@ -36,20 +45,16 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
 
   useEffect(() => {
     if (data !== null) {
-      setPayload(data.find((el: any) => el.type === label));
-      if (!!data.find((el: any) => el.type === label)) {
-        setAmount(data.find((el: any) => el.type === label).amount);
-      }
+      const match = data.find((el: any) => el.type === label);
+      setPayload(match);
+      if (match) setAmount(match.amount);
     }
   }, [data]);
 
   const handleCheck = (e: any) => {
-    if (e) {
-      handleClick(attr, label, amountSettle, true);
-    } else {
-      handleClick(attr, label, amountSettle, false);
-    }
+    handleClick(attr, label, amountSettle, e, cheque || null);
   };
+
   return (
     <div className="border rounded bg-white shadow-sm">
       <button className="w-full flex justify-between items-center px-2 py-2">
@@ -64,9 +69,7 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
           </span>
         </div>
         <svg
-          onClick={() => {
-            setOpen(!open);
-          }}
+          onClick={() => setOpen(!open)}
           className={`w-4 h-4 transition-transform transform ${open ? "rotate-90" : ""}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -82,6 +85,9 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
               type="text"
               className="w-full border rounded px-2 py-1 text-sm"
               placeholder="Transaction No."
+              value={payload?.transactionNo}
+              disabled={!!payload?.transactionNo}
+              onChange={(e) => setCheque(e.target.value)}
             />
           )}
           <input
@@ -97,40 +103,40 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
     </div>
   );
 };
+
 interface AccordionState {
-  [key: string]: boolean; // This is an index signature: allows any string key with a boolean value
+  [key: string]: boolean;
 }
 
 export default function AccordionUI() {
-  const [mainOpen, setMainOpen] = useState<AccordionState>({}); // <--- Apply the type here
+  const [mainOpen, setMainOpen] = useState<AccordionState>({});
   const [ledgers, setLedgers] = useState<any>({});
 
   useEffect(() => {
-    const fetchLedgers = async () => {
-      try {
-        const res = await axios.get("/api/ledger");
-        setLedgers(res.data.data[0]);
-        let toggle = {};
-        console.log(res.data.data);
-
-        res.data.data.Ledger_entries.map((entry: any) => {
-          toggle = { ...toggle, [entry?._id]: false };
-        });
-        setMainOpen(toggle);
-      } catch (err) {
-        console.error("Error fetching ledgers:", err);
-      } finally {
-      }
-    };
-
     fetchLedgers();
   }, []);
 
-  const handleOpen = async (id: string) => {
-    setMainOpen({ ...mainOpen, [id]: !mainOpen[id] });
+  const fetchLedgers = async (first = true) => {
+    try {
+      const res = await axios.get("/api/ledger");
+      setLedgers(res.data.data[0]);
+      const toggle: AccordionState = {};
+      res.data.data[0].Ledger_entries.forEach((entry: any) => {
+        toggle[entry._id] = false;
+      });
+      if (first) {
+        setMainOpen(toggle);
+      }
+    } catch (err) {
+      console.error("Error fetching ledgers:", err);
+    }
   };
 
-  const handleClick = async (id: any, label: any, amount: any, ispos: boolean) => {
+  const handleOpen = (id: string) => {
+    setMainOpen((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleClick = (id: any, label: any, amount: any, ispos: boolean, cheque: string) => {
     setLedgers((prev: any) => ({
       ...prev,
       Ledger_entries: prev.Ledger_entries.map((entry: any) => {
@@ -140,19 +146,28 @@ export default function AccordionUI() {
           ? {
               ...entry,
               amount: ispos ? total + found : total - found,
-              ...(ispos ? { transaction: { label, id, amount } } : { transaction: {} }),
+              ...handlemayBeSaved(entry, label, id, amount, ispos, cheque),
             }
           : entry;
       }),
     }));
   };
 
-  const handleCheck = (e: any, attr: any, label: any, amountSettle: any) => {
-    if (e) {
-      handleClick(attr, label, amountSettle, true);
-    } else {
-      handleClick(attr, label, amountSettle, false);
-    }
+  const handlemayBeSaved = (
+    entry: any,
+    label: any,
+    id: any,
+    amount: any,
+    ispos: any,
+    cheque: string
+  ) => {
+    const found = entry?.transaction ?? [];
+    const out = found.filter((el: any) => el.label !== label);
+    return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
+  };
+
+  const handleCheck = (e: any, attr: any, label: any, amountSettle: any, cheque: any) => {
+    handleClick(attr, label, amountSettle, e, cheque);
   };
 
   const handleSave = async (id: any) => {
@@ -160,40 +175,40 @@ export default function AccordionUI() {
     await fetch("/api/transaction/" + id, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: payload.transaction.label, amount: payload.transaction.amount }),
+      body: JSON.stringify(payload.transaction),
     });
+    await fetchLedgers(false);
   };
 
   return (
-    <div className="bg-white p-4 font-sans min-h-screen">
-      <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
-        {/* Date Header */}
+    <div className="bg-white p-2 sm:p-4 font-sans min-h-screen">
+      <div className="w-full sm:max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
         <div className="bg-blue-600 text-white text-center py-2 font-semibold text-lg">
-          {ledgers?.date ? moment(ledgers.date).format("DD-mm-yyyy") : ""}
+          {ledgers?.date ? moment(ledgers.date).format("DD-MM-YYYY") : ""}
         </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-4 text-xs font-bold border-b text-center bg-white">
+        <div className="grid grid-cols-2 sm:grid-cols-4 text-[10px] sm:text-xs font-bold border-b text-center bg-white">
           <div className="py-1">Bill No.</div>
           <div className="py-1">Company</div>
           <div className="py-1">Party Name</div>
           <div className="py-1">Amt.</div>
         </div>
 
-        {/* Bill Row */}
         {ledgers?.Ledger_entries &&
-          ledgers?.Ledger_entries.map((entry: any) => (
+          ledgers.Ledger_entries.map((entry: any) => (
             <div className="relative" key={entry?._id}>
               <div
-                className="grid grid-cols-4 items-start text-sm bg-gray-200 p-2 cursor-pointer"
-                onClick={() => handleOpen(entry?._id)}>
+                className="grid grid-cols-2 sm:grid-cols-4 items-start text-sm bg-gray-200 p-2 cursor-pointer"
+                onClick={() => handleOpen(entry._id)}>
                 <div>{entry.billNo}</div>
                 <div>-</div>
                 <div className="text-xs">{entry.party}</div>
-                <div className="flex justify-between items-right">
+                <div className="flex justify-between items-center">
                   <span className="font-semibold">₹{entry?.pending}</span>
                   <svg
-                    className={`w-4 h-4 ml-2 transition-transform ${mainOpen ? "rotate-90" : ""}`}
+                    className={`w-4 h-4 ml-2 transition-transform ${
+                      mainOpen[entry._id] ? "rotate-90" : ""
+                    }`}
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -208,25 +223,21 @@ export default function AccordionUI() {
                 </div>
               </div>
 
-              {/* Main Accordion Content */}
-              {mainOpen[entry?._id] && (
+              {mainOpen[entry._id] && (
                 <div className="px-3 py-2 bg-gray-100 space-y-2 text-sm">
-                  {/* Status Row */}
-                  <div className="flex justify-between text-xs">
+                  <div className="flex flex-col sm:flex-row justify-between text-xs gap-1">
                     <span className="text-red-600 font-semibold">Pending: ₹{entry?.pending}</span>
                     <span className="text-green-600 font-semibold">
                       Collected: ₹{entry?.amount}
                     </span>
                     <span
-                      className={
-                        "font-semibold " +
-                        (entry?.amount >= entry?.pending ? "text-green-600" : "text-red-600")
-                      }>
-                      Status: {entry?.amount >= entry?.amount ? "Finalized" : "PENDING"}
+                      className={`font-semibold ${
+                        entry?.amount >= entry?.pending ? "text-green-600" : "text-red-600"
+                      }`}>
+                      Status: {entry?.amount >= entry?.pending ? "Finalized" : "PENDING"}
                     </span>
                   </div>
 
-                  {/* Payment Methods */}
                   <PaymentMethod
                     label="Cash"
                     emoji="💵"
@@ -255,29 +266,30 @@ export default function AccordionUI() {
                     data={entry?.Ledger_entries_transaction}
                   />
 
-                  {/* Credit & Cancelled */}
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-sm space-x-2">
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry?._id, "credit", entry?.pending)
+                        handleCheck(e.target.checked, entry._id, "credit", entry?.pending, null)
                       }
                     />
                     <span>✉️ CREDIT</span>
                   </div>
+
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-sm space-x-2">
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry?._id, "cancel", entry?.pending)
+                        handleCheck(e.target.checked, entry._id, "cancel", entry?.pending, null)
                       }
                     />
                     <span>❌ CANCELLED</span>
                   </div>
+
                   <div className="flex items-center justify-end w-full">
                     <button
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                      onClick={() => handleSave(entry?._id)}>
+                      className="w-full sm:w-auto bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      onClick={() => handleSave(entry._id)}>
                       Save
                     </button>
                   </div>

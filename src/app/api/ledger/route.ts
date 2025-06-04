@@ -2,7 +2,7 @@ import connectToDatabase from "@/lib/mongodb";
 import Ledger from "@/models/ledger";
 import LedgerEntries from "@/models/ledger_entries";
 import { NextRequest, NextResponse } from "next/server";
-
+import "@/models/ledger_entries_transaction";
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
@@ -66,13 +66,13 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     await connectToDatabase();
-    let ledgerWithEntries = [];
-    ledgerWithEntries = await Ledger.find().populate({
+    const ledgerWithEntries = await Ledger.find().populate({
       path: "Ledger_entries",
       populate: {
         path: "Ledger_entries_transaction",
       },
     });
+
     return NextResponse.json({
       success: true,
       data: ledgerWithEntries,
@@ -80,6 +80,6 @@ export async function GET() {
     });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ success: false, error: "Failed to save" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch" }, { status: 500 });
   }
 }

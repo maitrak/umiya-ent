@@ -5,16 +5,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-
 import Link from "next/link";
 
 //react icons
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
 import { TriangleAlert } from "lucide-react";
+import OTPInput from "react-otp-input";
 
 const SignIn = () => {
   const [email, setEmail] = useState<string>("");
@@ -43,6 +43,10 @@ const SignIn = () => {
     }
   };
 
+  useEffect(() => {
+    console.log("password", password);
+  }, [password]);
+
   return (
     <div>
       <div className="LOGIN">
@@ -59,12 +63,12 @@ const SignIn = () => {
                 <label
                   htmlFor="phoneNumber"
                   className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
-                  Phone Number
+                  User ID
                 </label>
                 <Input
-                  type="number"
+                  type="text"
                   disabled={pending}
-                  placeholder="Phone Number"
+                  placeholder="User ID"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -76,13 +80,27 @@ const SignIn = () => {
                   className="block mb-2 font-medium text-gray-900 dark:text-white text-lg">
                   Password
                 </label>
-                <Input
+                {/* <Input
                   type="password"
                   disabled={pending}
                   placeholder="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                /> */}
+                <OTPInput
+                  inputStyle={{
+                    width: "3rem",
+                    height: "3rem",
+                    margin: "0 1rem",
+                    fontSize: "2rem",
+                    borderRadius: 4,
+                    border: "1px solid rgba(0,0,0,0.3)",
+                  }}
+                  value={password}
+                  numInputs={4}
+                  onChange={setPassword}
+                  renderInput={(props) => <input {...props} />}
                 />
               </div>
               <Button className="w-full" size="lg" disabled={pending}>

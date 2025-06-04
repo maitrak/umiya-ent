@@ -1,4 +1,5 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
+import { Schema } from "mongoose";
 
 const LedgerEntriesTransactionSchema = new Schema(
   {
@@ -27,8 +28,12 @@ const LedgerEntriesTransactionSchema = new Schema(
 );
 
 // This prevents model overwrite errors during hot-reloading
+
 const LedgerEntriesTransaction =
-  models.Ledger_entries_transaction ||
-  model("Ledger_entries_transaction", LedgerEntriesTransactionSchema);
+  mongoose.models.Ledger_entries_transaction ||
+  mongoose.model("Ledger_entries_transaction", LedgerEntriesTransactionSchema);
+// const LedgerEntriesTransaction =
+//   models.Ledger_entries_transaction ||
+//   mongoose.model("Ledger_entries_transaction", LedgerEntriesTransactionSchema);
 
 export default LedgerEntriesTransaction;
