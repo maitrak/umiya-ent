@@ -66,16 +66,21 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     await connectToDatabase();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the beginning of today
+    const now = new Date();
 
-    // Get tomorrow's date
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    const todayIST = new Date(now);
+    todayIST.setHours(0, 0, 0, 0);
+
+    const tomorrowIST = new Date(todayIST);
+    tomorrowIST.setDate(todayIST.getDate() + 1);
+
+    const todayUTC = new Date(todayIST.getTime() - 5.5 * 60 * 60 * 1000);
+    const tomorrowUTC = new Date(tomorrowIST.getTime() - 5.5 * 60 * 60 * 1000);
+
     const ledgerWithEntries = await Ledger.find({
-      created_at: {
-        $gte: today,
-        $lt: tomorrow,
+      createdAt: {
+        $gte: todayUTC,
+        $lt: tomorrowUTC,
       },
     }).populate({
       path: "Ledger_entries",
@@ -83,6 +88,7 @@ export async function GET() {
         path: "Ledger_entries_transaction",
       },
     });
+    console.log("ledgerWithEntries", ledgerWithEntries);
 
     return NextResponse.json({
       success: true,
