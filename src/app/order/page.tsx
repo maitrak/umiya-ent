@@ -91,7 +91,7 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
             />
           )}
           <input
-            type="text"
+            type="number"
             className="w-full border rounded px-2 py-1 text-sm"
             placeholder="Amount"
             value={amountSettle}
