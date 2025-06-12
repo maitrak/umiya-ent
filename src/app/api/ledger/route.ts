@@ -28,25 +28,13 @@ export async function POST(req: NextRequest) {
     const entries = await Ledger.create({ date: formatted, amount: totalAmount, pending: 0 });
 
     for (const entry of body) {
-      console.log({
-        amount: 0,
-        pending: entry?.["Pending Amount"] ? entry["Pending Amount"] : 0,
-        billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
-        party: entry?.["Party"] ? entry["Party"] : "",
-        discount: entry?.["Discount"] ? entry["Discount"] : "",
-        type: entry?.["Type"] ? entry["Type"] : "",
-        sales_man: entry?.["Salesman"] ? entry["Salesman"] : "",
-        ledger_id: entries?.id,
-        user: entry?.["User ID"] ? entry["User ID"] : 0,
-      });
-
       LedgerEntries.create({
         amount: entry?.["Bill Amount"] ? entry["Bill Amount"] : 0,
         pending: entry?.["Pending Amount"] ? entry["Pending Amount"] : 0,
         billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
         party: entry?.["Party"] ? entry["Party"] : "",
         discount: entry?.["Discount"] ? entry["Discount"] : 0,
-        type: entry?.["Type"] ? entry["Type"] : "",
+        type: entry?.["Company"] ? entry["Company"] : "",
         sales_man: entry?.["Salesman"] ? entry["Salesman"] : "",
         ledger_id: entries?.id,
         user: entry?.["User ID"] ? entry["User ID"] : 0,
@@ -74,15 +62,13 @@ export async function GET() {
     const tomorrowIST = new Date(todayIST);
     tomorrowIST.setDate(todayIST.getDate() + 1);
 
-    const todayUTC = new Date(todayIST.getTime() - 5.5 * 60 * 60 * 1000);
-    const tomorrowUTC = new Date(tomorrowIST.getTime() - 5.5 * 60 * 60 * 1000);
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const formatted = `${yyyy}-${mm}-${dd}`;
 
-    const ledgerWithEntries = await Ledger.find({
-      createdAt: {
-        $gte: todayUTC,
-        $lt: tomorrowUTC,
-      },
-    }).populate({
+    const ledgerWithEntries = await Ledger.find({ date: formatted }).populate({
       path: "Ledger_entries",
       populate: {
         path: "Ledger_entries_transaction",
