@@ -7,15 +7,10 @@ import { toast } from "sonner";
 
 interface PaymentMethodProps {
   label: string;
-  emoji: string; // Assuming emoji is a string (e.g., "💳" or a path to an image)
+  emoji: React.ReactNode; // Assuming emoji is a string (e.g., "💳" or a path to an image)
   amount: string; // Assuming amount is a number
   multi: boolean; // Assuming multi is a boolean
-  handleClick: (
-    attr: string,
-    label: string,
-    amount: string,
-    ispos: boolean
-  ) => void; // Assuming handleClick takes a string ID and returns void
+  handleClick: (attr: string, label: string, amount: string, ispos: boolean) => void; // Assuming handleClick takes a string ID and returns void
   attr: string; // Optional: for other input attributes
   data?: any;
 }
@@ -72,20 +67,12 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
           onClick={() => {
             setOpen(!open);
           }}
-          className={`w-4 h-4 transition-transform transform ${
-            open ? "rotate-90" : ""
-          }`}
+          className={`w-4 h-4 transition-transform transform ${open ? "rotate-90" : ""}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
+          stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
       {open && (
@@ -143,12 +130,7 @@ export default function AccordionUI() {
     setMainOpen({ ...mainOpen, [id]: !mainOpen[id] });
   };
 
-  const handleClick = async (
-    id: any,
-    label: any,
-    amount: any,
-    ispos: boolean
-  ) => {
+  const handleClick = async (id: any, label: any, amount: any, ispos: boolean) => {
     setLedgers((prev: any) => ({
       ...prev,
       Ledger_entries: prev.Ledger_entries.map((entry: any) => {
@@ -158,9 +140,7 @@ export default function AccordionUI() {
           ? {
               ...entry,
               amount: ispos ? total + found : total - found,
-              ...(ispos
-                ? { transaction: { label, id, amount } }
-                : { transaction: {} }),
+              ...(ispos ? { transaction: { label, id, amount } } : { transaction: {} }),
             }
           : entry;
       }),
@@ -209,21 +189,20 @@ export default function AccordionUI() {
             <div className="relative" key={entry?._id}>
               <div
                 className="grid grid-cols-4 items-start text-sm bg-gray-200 p-2 cursor-pointer"
-                onClick={() => handleOpen(entry?._id)}
-              >
+                onClick={() => handleOpen(entry?._id)}>
                 <div>{entry.billNo}</div>
-                <div>
+                <div className="text-center">
+                  {entry.type}
                   <div
                     style={{
                       width: "100%",
                       height: "100%",
                       position: "relative",
                       borderRadius: 8,
-                    }}
-                  >
+                    }}>
                     <div
                       style={{
-                        width: 89,
+                        width: "104px",
                         height: 18,
                         left: 0,
                         top: 0,
@@ -234,7 +213,7 @@ export default function AccordionUI() {
                     />
                     <div
                       style={{
-                        width: 88,
+                        width: "104px",
                         left: 1,
                         top: 1,
                         position: "absolute",
@@ -247,9 +226,8 @@ export default function AccordionUI() {
                         fontFamily: "Avenir",
                         fontWeight: "900",
                         wordWrap: "break-word",
-                      }}
-                    >
-                      Jaimin Patel
+                      }}>
+                      {entry.sales_man}
                     </div>
                   </div>
                 </div>
@@ -261,16 +239,10 @@ export default function AccordionUI() {
                     width="24"
                     height="24"
                     fill="none"
-                    viewBox="0 0 24 24"
-                  >
+                    viewBox="0 0 24 24">
                     <path fill="url(#a)" d="M0 0h24v24H0z" />
                     <defs>
-                      <pattern
-                        id="a"
-                        width="1"
-                        height="1"
-                        patternContentUnits="objectBoundingBox"
-                      >
+                      <pattern id="a" width="1" height="1" patternContentUnits="objectBoundingBox">
                         <use href="#b" transform="scale(.01)" />
                       </pattern>
                       <image
@@ -290,22 +262,16 @@ export default function AccordionUI() {
                 <div className="px-3 py-2 bg-gray-100 space-y-2 text-sm">
                   {/* Status Row */}
                   <div className="flex justify-between text-xs">
-                    <span className="text-red-600 font-semibold">
-                      Pending: ₹{entry?.pending}
-                    </span>
+                    <span className="text-red-600 font-semibold">Pending: ₹{entry?.pending}</span>
                     <span className="text-green-600 font-semibold">
                       Collected: ₹{entry?.amount}
                     </span>
                     <span
                       className={
                         "font-semibold " +
-                        (entry?.amount >= entry?.pending
-                          ? "text-green-600"
-                          : "text-red-600")
-                      }
-                    >
-                      Status:{" "}
-                      {entry?.amount >= entry?.amount ? "Finalized" : "PENDING"}
+                        (entry?.amount >= entry?.pending ? "text-green-600" : "text-red-600")
+                      }>
+                      Status: {entry?.amount >= entry?.amount ? "Finalized" : "PENDING"}
                     </span>
                   </div>
 
@@ -336,8 +302,7 @@ export default function AccordionUI() {
                         width="44"
                         height="26"
                         fill="none"
-                        viewBox="0 0 44 26"
-                      >
+                        viewBox="0 0 44 26">
                         <path
                           fill="#137AA8"
                           fill-rule="evenodd"
@@ -464,12 +429,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(
-                          e.target.checked,
-                          entry?._id,
-                          "credit",
-                          entry?.pending
-                        )
+                        handleCheck(e.target.checked, entry?._id, "credit", entry?.pending)
                       }
                     />
                     <span className="flex">
@@ -478,8 +438,7 @@ export default function AccordionUI() {
                         width="41"
                         height="29"
                         fill="none"
-                        viewBox="0 0 41 29"
-                      >
+                        viewBox="0 0 41 29">
                         <path
                           fill="#137AA8"
                           d="M38.154 12.052a9.609 9.609 0 0 0-5.265-2.788V4.26C32.89 1.91 31.015 0 28.711 0H4.178C1.875 0 0 1.908 0 4.26v16.33c0 2.348 1.875 4.259 4.178 4.259h19.228c.306.435.646.845 1.018 1.226a9.594 9.594 0 0 0 3.14 2.16 9.558 9.558 0 0 0 10.61-2.139c3.776-3.866 3.767-10.166-.02-14.044Zm-6.586-7.797v4.873c-.103 0-.206-.006-.309-.006a9.5 9.5 0 0 0-3.72.752 9.537 9.537 0 0 0-3.134 2.15 9.86 9.86 0 0 0-2.304 3.782l-1.885-1.39L31.211 2.842c.235.435.358.922.357 1.416v-.004ZM4.178 1.327h24.533c.58 0 1.145.182 1.618.52L17.791 15.05c-.445.469-1.024.688-1.59.6a1.842 1.842 0 0 1-1.052-.596L2.79 1.701a2.785 2.785 0 0 1 1.39-.373ZM1.321 20.59V4.26a2.97 2.97 0 0 1 .5-1.659l10.892 11.773-10.718 8.105a2.964 2.964 0 0 1-.674-1.889Zm2.857 2.933a2.79 2.79 0 0 1-1.079-.218l10.518-7.953.565.609a3.148 3.148 0 0 0 1.82 1.003c.143.022.29.033.435.033a3.208 3.208 0 0 0 2.312-1.03l.547-.576 2.445 1.807a10.198 10.198 0 0 0 .875 6.325H4.178Zm33.053 1.644a8.272 8.272 0 0 1-5.936 2.507 8.244 8.244 0 0 1-5.928-2.527c-3.286-3.366-3.295-8.833-.02-12.186a8.272 8.272 0 0 1 5.936-2.507 8.241 8.241 0 0 1 5.928 2.528c3.285 3.365 3.295 8.832.02 12.185Z"
@@ -496,12 +455,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(
-                          e.target.checked,
-                          entry?._id,
-                          "cancel",
-                          entry?.pending
-                        )
+                        handleCheck(e.target.checked, entry?._id, "cancel", entry?.pending)
                       }
                     />
                     <span className="flex">
@@ -512,13 +466,8 @@ export default function AccordionUI() {
                           height="27"
                           fill="none"
                           viewBox="0 0 32 27"
-                          className="mr-4"
-                        >
-                          <path
-                            stroke="#137AA8"
-                            stroke-width="3"
-                            d="M1 25 29.5 2M31 25 1 2"
-                          />
+                          className="mr-4">
+                          <path stroke="#137AA8" stroke-width="3" d="M1 25 29.5 2M31 25 1 2" />
                         </svg>
                       </div>
                       <div className="m-[5px]">CANCELLED</div>
@@ -527,8 +476,7 @@ export default function AccordionUI() {
                   <div className="flex items-center justify-end w-full">
                     <button
                       className="bg-[#137AA8] text-white px-4 py-2 rounded"
-                      onClick={() => handleSave(entry?._id)}
-                    >
+                      onClick={() => handleSave(entry?._id)}>
                       Save
                     </button>
                   </div>
