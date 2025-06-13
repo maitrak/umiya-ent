@@ -21,7 +21,7 @@ const Upload = () => {
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet);
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
       setData(json);
     } else if (extension === "csv") {
       Papa.parse(file, {
@@ -31,7 +31,7 @@ const Upload = () => {
         },
         header: true,
         dynamicTyping: true,
-        skipEmptyLines: true,
+        skipEmptyLines: false,
       });
     } else {
       alert("Unsupported file type. Please upload .csv, .xls, or .xlsx");
@@ -39,12 +39,17 @@ const Upload = () => {
   };
   const normalizeExcelData = (excelData: ExcelRow[]): ExcelRow[] => {
     if (!Array.isArray(excelData) || excelData.length < 2) return [];
-
+    console.log("excelData", excelData);
     const headerRow = excelData[0];
+    console.log("headerRow", headerRow);
+
     const headers = Object.values(headerRow);
+    console.log("headers", headers);
+    console.log(excelData.slice(1));
 
     return excelData.slice(1).map((row) => {
       const rowValues = Object.values(row);
+      // console.log("rowValues", rowValues);
       const entry: Record<string, any> = {};
 
       headers.forEach((header, index) => {
@@ -56,6 +61,7 @@ const Upload = () => {
   };
   const handleUpload = async () => {
     const normalizeData = normalizeExcelData(data);
+    console.log({ normalizeData });
 
     if (normalizeData.length === 0) {
       toast.error("Please upload a valid file ot Not data in it");

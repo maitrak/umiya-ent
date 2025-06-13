@@ -226,7 +226,7 @@ export default function AccordionUI() {
                   {entry.billNo}
                 </div>
                 <div className="px-2 py-10 border-r border-black">
-                  Company
+                  {entry.type}
                   <div
                     style={{
                       width: "100%",
@@ -261,7 +261,7 @@ export default function AccordionUI() {
                         wordWrap: "break-word",
                       }}
                     >
-                      Jaimin Patel
+                      {entry.sales_man}
                     </div>
                   </div>
                 </div>
