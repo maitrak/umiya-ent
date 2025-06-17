@@ -10,12 +10,7 @@ interface PaymentMethodProps {
   emoji: string | JSX.Element; // Assuming emoji is a string (e.g., "💳" or a path to an image)
   amount: string; // Assuming amount is a number
   multi: boolean; // Assuming multi is a boolean
-  handleClick: (
-    attr: string,
-    label: string,
-    amount: string,
-    ispos: boolean
-  ) => void; // Assuming handleClick takes a string ID and returns void
+  handleClick: any; // Assuming handleClick takes a string ID and returns void
   attr: string; // Optional: for other input attributes
   data?: any;
 }
@@ -59,11 +54,17 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
     <div className="border rounded bg-white shadow-sm">
       <button className="w-full flex justify-between items-center px-2 py-2">
         <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            onChange={(e) => handleCheck(e.target.checked)}
-            disabled={!!payload}
-          />
+          {!!payload ? (
+            <input
+              type="checkbox"
+              onChange={(e) => handleCheck(e.target.checked)}
+              disabled={!!payload}
+              checked={!!payload}
+            />
+          ) : (
+            <input type="checkbox" onChange={(e) => handleCheck(e.target.checked)} />
+          )}
+
           <span className="flex items-center">
             {emoji} {label}
           </span>
@@ -72,20 +73,12 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
           onClick={() => {
             setOpen(!open);
           }}
-          className={`w-4 h-4 transition-transform transform ${
-            open ? "rotate-90" : ""
-          }`}
+          className={`w-4 h-4 transition-transform transform ${open ? "rotate-90" : ""}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
+          stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
       {open && (
@@ -94,7 +87,7 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
             <input
               type="text"
               className="w-full border rounded px-2 py-1 text-sm"
-              placeholder="Transaction No."
+              placeholder="Cheque No."
             />
           )}
           <input
@@ -115,40 +108,35 @@ interface AccordionState {
 }
 
 export default function AccordionUI() {
-  const [mainOpen, setMainOpen] = useState<AccordionState>({}); // <--- Apply the type here
+  const [clicked, setClicked] = useState(false);
+  const [mainOpen, setMainOpen] = useState<AccordionState>({});
   const [ledgers, setLedgers] = useState<any>({});
 
   useEffect(() => {
-    const fetchLedgers = async () => {
-      try {
-        const res = await axios.get("/api/ledger");
-        setLedgers(res.data.data[0]);
-        let toggle = {};
-        console.log(res.data.data);
-
-        res.data.data.Ledger_entries.map((entry: any) => {
-          toggle = { ...toggle, [entry?._id]: false };
-        });
-        setMainOpen(toggle);
-      } catch (err) {
-        console.error("Error fetching ledgers:", err);
-      } finally {
-      }
-    };
-
     fetchLedgers();
   }, []);
 
-  const handleOpen = async (id: string) => {
-    setMainOpen({ ...mainOpen, [id]: !mainOpen[id] });
+  const fetchLedgers = async (first = true) => {
+    try {
+      const res = await axios.get("/api/ledger");
+      setLedgers(res.data.data[0]);
+      const toggle: AccordionState = {};
+      res.data.data[0].Ledger_entries.forEach((entry: any) => {
+        toggle[entry._id] = false;
+      });
+      if (first) {
+        setMainOpen(toggle);
+      }
+    } catch (err) {
+      console.error("Error fetching ledgers:", err);
+    }
   };
 
-  const handleClick = async (
-    id: any,
-    label: any,
-    amount: any,
-    ispos: boolean
-  ) => {
+  const handleOpen = (id: string) => {
+    setMainOpen((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleClick = (id: any, label: any, amount: any, ispos: boolean, cheque: string) => {
     setLedgers((prev: any) => ({
       ...prev,
       Ledger_entries: prev.Ledger_entries.map((entry: any) => {
@@ -158,44 +146,38 @@ export default function AccordionUI() {
           ? {
               ...entry,
               amount: ispos ? total + found : total - found,
-              ...(ispos
-                ? { transaction: { label, id, amount } }
-                : { transaction: {} }),
+              ...handlemayBeSaved(entry, label, id, amount, ispos, cheque),
             }
           : entry;
       }),
     }));
   };
 
-  const handleCheck = (e: any, attr: any, label: any, amountSettle: any) => {
-    if (e) {
-      handleClick(attr, label, amountSettle, true);
-    } else {
-      handleClick(attr, label, amountSettle, false);
-    }
+  const handlemayBeSaved = (
+    entry: any,
+    label: any,
+    id: any,
+    amount: any,
+    ispos: any,
+    cheque: string
+  ) => {
+    const found = entry?.transaction ?? [];
+    const out = found.filter((el: any) => el.label !== label);
+    return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
   };
 
-  const [clicked, setClicked] = useState(false);
+  const handleCheck = (e: any, attr: any, label: any, amountSettle: any, cheque: any) => {
+    handleClick(attr, label, amountSettle, e, cheque);
+  };
 
   const handleSave = async (id: any) => {
     const payload = ledgers.Ledger_entries.find((el: any) => el._id === id);
-    if (!payload) return;
-
-    try {
-      await fetch("/api/transaction/" + id, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: payload.transaction.label,
-          amount: payload.transaction.amount,
-        }),
-      });
-
-      // Change button color after successful save
-      setClicked(true);
-    } catch (error) {
-      console.error("Failed to save transaction", error);
-    }
+    await fetch("/api/transaction/" + id, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload.transaction),
+    });
+    await fetchLedgers(false);
   };
 
   return (
@@ -219,26 +201,23 @@ export default function AccordionUI() {
           ledgers?.Ledger_entries.map((entry: any) => (
             <div className="relative" key={entry?._id}>
               <div
-                className="flex grid grid-cols-4 items-start text-sm bg-gray-200 cursor-pointer"
-                onClick={() => handleOpen(entry?._id)}
-              >
-                <div className="px-2 py-8 border-r border-black">
-                  {entry.billNo}
-                </div>
-                <div className="px-2 py-10 border-r border-black">
+                className={` ${
+                  entry?.Ledger_entries_transaction.length > 0 ? "bg-[#137AA8]" : "bg-gray-200"
+                } flex grid grid-cols-4 items-start text-sm  cursor-pointer`}
+                onClick={() => handleOpen(entry?._id)}>
+                <div className="px-2 py-2 border-r border-black h-full">{entry.billNo}</div>
+                <div className="px-2 py-2 border-r border-black text-center h-full">
                   {entry.type}
                   <div
                     style={{
-                      width: "100%",
                       height: "100%",
                       position: "absolute",
                       flexDirection: "row",
                       borderRadius: 8,
-                    }}
-                  >
+                    }}>
                     <div
                       style={{
-                        width: 60,
+                        width: "100px",
                         height: 18,
                         left: 0,
                         position: "absolute",
@@ -248,6 +227,7 @@ export default function AccordionUI() {
                       }}
                     />
                     <div
+                      className="text-center"
                       style={{
                         width: 88,
                         left: 8,
@@ -259,45 +239,57 @@ export default function AccordionUI() {
                         fontFamily: "Avenir",
                         fontWeight: "900",
                         wordWrap: "break-word",
-                      }}
-                    >
+                        justifyContent: "center",
+                      }}>
                       {entry.sales_man}
                     </div>
                   </div>
                 </div>
-                <div className="px-2 py-2 border-r border-black">
-                  {entry.party}
-                </div>
-                <div className="justify-between items-center">
-                  <span className="font-semibold items-center">
-                    ₹{entry?.pending}
-                  </span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <path fill="url(#a)" d="M0 0h24v24H0z" />
-                    <defs>
-                      <pattern
-                        id="a"
-                        width="1"
-                        height="1"
-                        patternContentUnits="objectBoundingBox"
-                      >
-                        <use href="#b" transform="scale(.01)" />
-                      </pattern>
-                      <image
-                        id="b"
-                        width="100"
-                        height="100"
-                        href="data:image/png;base64,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"
-                        preserveAspectRatio="none"
+                <div className="px-2 py-2 border-r border-black h-full">{entry.party}</div>
+                <div className="main flex justify-end items-center space-x-2 pr-[20px]  mt-2 ">
+                  <span className="font-semibold items-center">₹{entry?.pending}</span>
+                  {entry?.Ledger_entries_transaction.length > 0 ? (
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 100 100"
+                      xmlns="http://www.w3.org/2000/svg">
+                      <rect x="0" y="0" width="100" height="100" rx="20" ry="20" fill="#E5E7EB" />
+                      <path
+                        d="M30 52 L44 66 L72 38"
+                        fill="none"
+                        stroke="black"
+                        stroke-width="8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                       />
-                    </defs>
-                  </svg>
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      fill="none"
+                      viewBox="0 0 24 24">
+                      <path fill="url(#a)" d="M0 0h24v24H0z" />
+                      <defs>
+                        <pattern
+                          id="a"
+                          width="1"
+                          height="1"
+                          patternContentUnits="objectBoundingBox">
+                          <use href="#b" transform="scale(.01)" />
+                        </pattern>
+                        <image
+                          id="b"
+                          width="100"
+                          height="100"
+                          href="data:image/png;base64,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"
+                          preserveAspectRatio="none"
+                        />
+                      </defs>
+                    </svg>
+                  )}
                 </div>
               </div>
 
@@ -307,21 +299,10 @@ export default function AccordionUI() {
                   {/* Status Row */}
                   <div className="flex justify-between text-xs">
                     <span className="text-red-600 font-semibold">
-                      Pending: ₹{entry?.pending}
+                      To be Collected (Pending): ₹{entry?.pending}
                     </span>
                     <span className="text-green-600 font-semibold">
                       Collected: ₹{entry?.amount}
-                    </span>
-                    <span
-                      className={
-                        "font-semibold " +
-                        (entry?.amount >= entry?.pending
-                          ? "text-green-600"
-                          : "text-red-600")
-                      }
-                    >
-                      Status:{" "}
-                      {entry?.amount >= entry?.amount ? "Finalized" : "PENDING"}
                     </span>
                   </div>
 
@@ -336,8 +317,7 @@ export default function AccordionUI() {
                           width="42"
                           height="23"
                           fill="none"
-                          viewBox="0 0 42 23"
-                        >
+                          viewBox="0 0 42 23">
                           <path
                             fill="#137AA8"
                             d="M34.3 12.849a1.35 1.35 0 1 0 0-2.698 1.35 1.35 0 0 0 0 2.698ZM12.602 11.5a7.96 7.96 0 1 0 7.96-7.96 7.97 7.97 0 0 0-7.96 7.96Zm7.96-6.537a6.537 6.537 0 1 1-6.537 6.537 6.545 6.545 0 0 1 6.537-6.537Z"
@@ -371,10 +351,9 @@ export default function AccordionUI() {
                           className="mr-[10px] ml-[25px]"
                           xmlns="http://www.w3.org/2000/svg"
                           width="30"
-                          height="33"
+                          height="25"
                           fill="none"
-                          viewBox="0 0 20 33"
-                        >
+                          viewBox="0 0 20 33">
                           <path
                             fill="#137AA8"
                             fill-rule="evenodd"
@@ -400,8 +379,7 @@ export default function AccordionUI() {
                           width="44"
                           height="26"
                           fill="none"
-                          viewBox="0 0 44 26"
-                        >
+                          viewBox="0 0 44 26">
                           <path
                             fill="#137AA8"
                             fill-rule="evenodd"
@@ -529,12 +507,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(
-                          e.target.checked,
-                          entry?._id,
-                          "credit",
-                          entry?.pending
-                        )
+                        handleCheck(e.target.checked, entry._id, "credit", entry?.pending, null)
                       }
                     />
                     <span className="flex">
@@ -544,8 +517,7 @@ export default function AccordionUI() {
                         width="41"
                         height="29"
                         fill="none"
-                        viewBox="0 0 41 29"
-                      >
+                        viewBox="0 0 41 29">
                         <path
                           fill="#137AA8"
                           d="M38.154 12.052a9.609 9.609 0 0 0-5.265-2.788V4.26C32.89 1.91 31.015 0 28.711 0H4.178C1.875 0 0 1.908 0 4.26v16.33c0 2.348 1.875 4.259 4.178 4.259h19.228c.306.435.646.845 1.018 1.226a9.594 9.594 0 0 0 3.14 2.16 9.558 9.558 0 0 0 10.61-2.139c3.776-3.866 3.767-10.166-.02-14.044Zm-6.586-7.797v4.873c-.103 0-.206-.006-.309-.006a9.5 9.5 0 0 0-3.72.752 9.537 9.537 0 0 0-3.134 2.15 9.86 9.86 0 0 0-2.304 3.782l-1.885-1.39L31.211 2.842c.235.435.358.922.357 1.416v-.004ZM4.178 1.327h24.533c.58 0 1.145.182 1.618.52L17.791 15.05c-.445.469-1.024.688-1.59.6a1.842 1.842 0 0 1-1.052-.596L2.79 1.701a2.785 2.785 0 0 1 1.39-.373ZM1.321 20.59V4.26a2.97 2.97 0 0 1 .5-1.659l10.892 11.773-10.718 8.105a2.964 2.964 0 0 1-.674-1.889Zm2.857 2.933a2.79 2.79 0 0 1-1.079-.218l10.518-7.953.565.609a3.148 3.148 0 0 0 1.82 1.003c.143.022.29.033.435.033a3.208 3.208 0 0 0 2.312-1.03l.547-.576 2.445 1.807a10.198 10.198 0 0 0 .875 6.325H4.178Zm33.053 1.644a8.272 8.272 0 0 1-5.936 2.507 8.244 8.244 0 0 1-5.928-2.527c-3.286-3.366-3.295-8.833-.02-12.186a8.272 8.272 0 0 1 5.936-2.507 8.241 8.241 0 0 1 5.928 2.528c3.285 3.365 3.295 8.832.02 12.185Z"
@@ -562,12 +534,7 @@ export default function AccordionUI() {
                     <input
                       type="checkbox"
                       onChange={(e) =>
-                        handleCheck(
-                          e.target.checked,
-                          entry?._id,
-                          "cancel",
-                          entry?.pending
-                        )
+                        handleCheck(e.target.checked, entry._id, "cancel", entry?.pending, null)
                       }
                     />
                     <span className="flex">
@@ -578,13 +545,8 @@ export default function AccordionUI() {
                           height="27"
                           fill="none"
                           viewBox="0 0 32 27"
-                          className="mr-4"
-                        >
-                          <path
-                            stroke="#137AA8"
-                            stroke-width="3"
-                            d="M1 25 29.5 2M31 25 1 2"
-                          />
+                          className="mr-4">
+                          <path stroke="#137AA8" stroke-width="3" d="M1 25 29.5 2M31 25 1 2" />
                         </svg>
                       </div>
                       <div>CANCELLED</div>
@@ -595,8 +557,7 @@ export default function AccordionUI() {
                       className={`flex items-center justify-center w-full ${
                         clicked ? "bg-green-600" : "bg-[#137AA8]"
                       } text-white px-2 py-2 rounded`}
-                      onClick={() => handleSave(entry?._id)}
-                    >
+                      onClick={() => handleSave(entry?._id)}>
                       Save
                     </button>
                   </div>

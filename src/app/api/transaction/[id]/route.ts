@@ -38,7 +38,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       });
       amount += +data.amount;
     }
-    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount } });
+    const old = await LedgerEntries.findById(params.id);
+    const newAmount = old?.amount + amount;
+
+    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount: newAmount } });
     return NextResponse.json({
       success: true,
       data: body,

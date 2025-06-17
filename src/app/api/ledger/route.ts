@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     for (const entry of body) {
       LedgerEntries.create({
-        amount: entry?.["Bill Amount"] ? entry["Bill Amount"] : 0,
+        amount: 0,
         pending: entry?.["Pending Amount"] ? entry["Pending Amount"] : 0,
         billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
         party: entry?.["Party"] ? entry["Party"] : "",
@@ -74,7 +74,6 @@ export async function GET() {
         path: "Ledger_entries_transaction",
       },
     });
-    console.log("ledgerWithEntries", ledgerWithEntries);
 
     return NextResponse.json({
       success: true,
