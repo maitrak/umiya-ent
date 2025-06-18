@@ -51,7 +51,7 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
     }
   };
   return (
-    <div className="border rounded bg-white shadow-sm">
+    <div className="border rounded bg-white shadow-md">
       <button className="w-full flex justify-between items-center px-2 py-2">
         <div className="flex items-center space-x-2">
           {!!payload ? (
@@ -208,7 +208,7 @@ export default function AccordionUI() {
         {/* Bill Row */}
         {ledgers?.Ledger_entries &&
           ledgers?.Ledger_entries.map((entry: any) => (
-            <div className="relative" key={entry?._id}>
+            <div className="relative inset-shadow-md inset-shadow-indigo-500/50 " key={entry?._id}>
               <div
                 className={` ${
                   entry?.Ledger_entries_transaction.length > 0 ? "bg-[#137AA8]" : "bg-gray-200"
@@ -304,7 +304,7 @@ export default function AccordionUI() {
 
               {/* Main Accordion Content */}
               {mainOpen[entry?._id] && (
-                <div className="px-3 py-2 bg-gray-100 space-y-2 text-sm">
+                <div className="px-3 py-2 bg-gray-100 space-y-2 text-sm inset shadow-up">
                   {/* Status Row */}
                   <div className="flex justify-between text-xs">
                     <span className="text-red-600 font-semibold">
@@ -512,7 +512,7 @@ export default function AccordionUI() {
                   />
 
                   {/* Credit & Cancelled */}
-                  <div className="flex items-center px-2 py-2 bg-white border rounded shadow-sm space-x-2">
+                  <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="checkbox"
                       onChange={(e) =>
@@ -539,7 +539,7 @@ export default function AccordionUI() {
                       <div className="flex mr-[2px] ml-[20px]">CREDIT</div>
                     </span>
                   </div>
-                  <div className="flex items-center px-2 py-2 bg-white border rounded shadow-sm space-x-2">
+                  <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="checkbox"
                       onChange={(e) =>
