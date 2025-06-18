@@ -111,6 +111,16 @@ export default function AccordionUI() {
   const [clicked, setClicked] = useState(false);
   const [mainOpen, setMainOpen] = useState<AccordionState>({});
   const [ledgers, setLedgers] = useState<any>({});
+  const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    if (ledgers?.Ledger_entries?.length > 0) {
+      const finish = ledgers.Ledger_entries.map((el: any) =>
+        el?.Ledger_entries_transaction?.length > 0 ? true : false
+      ).reduce((a: boolean, b: boolean) => a && b);
+      setCompleted(finish);
+    }
+  }, [ledgers]);
 
   useEffect(() => {
     fetchLedgers();
@@ -565,6 +575,15 @@ export default function AccordionUI() {
               )}
             </div>
           ))}
+        {completed && (
+          <div className="flex justify-center mt-[10px]">
+            <button
+              type="button"
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+              Complete
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
