@@ -108,7 +108,6 @@ interface AccordionState {
 }
 
 export default function AccordionUI() {
-  const [clicked, setClicked] = useState(false);
   const [mainOpen, setMainOpen] = useState<AccordionState>({});
   const [ledgers, setLedgers] = useState<any>({});
   const [completed, setCompleted] = useState(false);
@@ -565,7 +564,9 @@ export default function AccordionUI() {
                   <div className="flex items-center justify-center w-full">
                     <button
                       className={`flex items-center justify-center w-full ${
-                        clicked ? "bg-green-600" : "bg-[#137AA8]"
+                        entry?.Ledger_entries_transaction.length > 0
+                          ? "bg-green-600"
+                          : "bg-[#137AA8]"
                       } text-white px-2 py-2 rounded`}
                       onClick={() => handleSave(entry?._id)}>
                       Save
