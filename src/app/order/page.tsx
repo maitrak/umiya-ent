@@ -187,6 +187,7 @@ export default function AccordionUI() {
       body: JSON.stringify(payload.transaction),
     });
     await fetchLedgers(false);
+    handleOpen(id);
   };
 
   return (
@@ -308,7 +309,7 @@ export default function AccordionUI() {
                   {/* Status Row */}
                   <div className="flex justify-between text-xs">
                     <span className="text-red-600 font-semibold">
-                      To be Collected (Pending): ₹{entry?.pending}
+                      Pending: ₹{entry?.pending - entry?.amount}
                     </span>
                     <span className="text-green-600 font-semibold">
                       Collected: ₹{entry?.amount}
@@ -515,9 +516,7 @@ export default function AccordionUI() {
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="checkbox"
-                      onChange={(e) =>
-                        handleCheck(e.target.checked, entry._id, "credit", entry?.pending, null)
-                      }
+                      onChange={(e) => handleCheck(e.target.checked, entry._id, "credit", 0, null)}
                     />
                     <span className="flex">
                       <svg
@@ -542,9 +541,7 @@ export default function AccordionUI() {
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="checkbox"
-                      onChange={(e) =>
-                        handleCheck(e.target.checked, entry._id, "cancel", entry?.pending, null)
-                      }
+                      onChange={(e) => handleCheck(e.target.checked, entry._id, "cancel", 0, null)}
                     />
                     <span className="flex">
                       <div className="items-right mr-[15px] ml-[20px]">
@@ -565,11 +562,13 @@ export default function AccordionUI() {
                     <button
                       className={`flex items-center justify-center w-full ${
                         entry?.Ledger_entries_transaction.length > 0
-                          ? "bg-green-600"
+                          ? "bg-[#6f6f6f85]"
                           : "bg-[#137AA8]"
                       } text-white px-2 py-2 rounded`}
-                      onClick={() => handleSave(entry?._id)}>
-                      Save
+                      onClick={() =>
+                        entry?.Ledger_entries_transaction.length === 0 && handleSave(entry?._id)
+                      }>
+                      Done
                     </button>
                   </div>
                 </div>
@@ -580,8 +579,8 @@ export default function AccordionUI() {
           <div className="flex justify-center mt-[10px]">
             <button
               type="button"
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-              Complete
+              className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+              Generate Total Cash Collected
             </button>
           </div>
         )}
