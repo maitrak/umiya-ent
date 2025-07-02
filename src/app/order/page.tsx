@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface PaymentMethodProps {
   label: string;
@@ -188,6 +189,14 @@ export default function AccordionUI() {
     });
     await fetchLedgers(false);
     handleOpen(id);
+  };
+
+  const router = useRouter();
+  const generateTotalCashCollected = () => {
+    const state = { id: ledgers?.id };
+    const params = new URLSearchParams(state).toString();
+    router.push(`/summary?${params}`);
+    return true;
   };
 
   return (
@@ -579,6 +588,7 @@ export default function AccordionUI() {
           <div className="flex justify-center mt-[10px]">
             <button
               type="button"
+              onClick={() => generateTotalCashCollected()}
               className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
               Generate Total Cash Collected
             </button>
