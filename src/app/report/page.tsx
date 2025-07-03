@@ -3,9 +3,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import OTPInput from "react-otp-input";
-import { NextResponse } from "next/server";
 import { toast } from "sonner";
-import { tree } from "next/dist/build/templates/app-page";
 
 export default function Report() {
   const searchParams = useSearchParams();
@@ -39,6 +37,7 @@ export default function Report() {
         return;
       }
       setLedgers(res.data.data);
+      console.log(res.data.data?.Approved);
       setApprove(res.data.data?.Approved);
       console.log(res.data.data?.Ledger_entries);
       const noteDenominations: any = ["500", "200", "100", "50", "20", "10", "5"];
@@ -171,7 +170,7 @@ export default function Report() {
           <span className="flex-1 text-black text-[32px] font-bold mr-1">{"TOTAL AMOUNT:"}</span>
           <span className="flex-1 text-[#B03939] text-[32px] font-bold text-right">₹{total}</span>
         </div>
-        {true && (
+        {!approve && (
           <div className="flex flex-col items-center self-stretch bg-[#D9D9D9] py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
             <div className="flex items-start self-stretch">
               <span className="flex-1 text-black text-xl font-bold">{"Admin\nPassword:"}</span>

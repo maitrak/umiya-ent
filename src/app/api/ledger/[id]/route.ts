@@ -4,8 +4,6 @@ import "@/models/ledger_entries";
 import "@/models/ledger_entries_transaction";
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import path from "path";
-import fs from "fs";
 // GET /api/transaction/[id]
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -30,11 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-  res: NextResponse
-) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await connectToDatabase();
     const body = await req.json();

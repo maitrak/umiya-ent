@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { set } from "mongoose";
 import { useFormikContext } from "formik";
 
 const SubmitOnChange = () => {
@@ -141,7 +140,7 @@ export default function Summary() {
             setGrandTotal(grandTotal);
             setCashCollection(values);
           }}>
-          {({ errors, touched }) => (
+          {({}) => (
             <Form className="flex flex-col items-start self-stretch mb-[58px] mx-[21px] gap-3">
               {/* Header */}
               <SubmitOnChange /> {/* 🔁 Add this line here */}
