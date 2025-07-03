@@ -130,6 +130,11 @@ export default function AccordionUI() {
     try {
       const res = await axios.get("/api/ledger");
       setLedgers(res.data.data[0]);
+      if (res.data.data[0]?.isGenerated) {
+        const state = { id: res.data.data[0].id };
+        const params = new URLSearchParams(state).toString();
+        router.push(`/report?${params}`);
+      }
       const toggle: AccordionState = {};
       res.data.data[0].Ledger_entries.forEach((entry: any) => {
         toggle[entry._id] = false;
@@ -590,7 +595,7 @@ export default function AccordionUI() {
               type="button"
               onClick={() => generateTotalCashCollected()}
               className="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-              Generate Total Cash Collected
+              Total Cash Collected
             </button>
           </div>
         )}

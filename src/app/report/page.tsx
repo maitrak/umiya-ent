@@ -1,4 +1,118 @@
+"use client";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import OTPInput from "react-otp-input";
+import { NextResponse } from "next/server";
+import { toast } from "sonner";
+import { tree } from "next/dist/build/templates/app-page";
+
 export default function Report() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [ledgers, setLedgers] = useState<any>(null);
+  const [parties, setParties] = useState<number>(0);
+  const [cash, setCash] = useState<number>(0);
+  const [upi, setUPI] = useState<number>(0);
+  const [cancelled, setCancelled] = useState<number>(0);
+  const [credit, setCredit] = useState<number>(0);
+  const [cheque, setCheque] = useState<number>(0);
+  const [password, setPassword] = useState<string>("");
+  const [total, setTotal] = useState<number>(0);
+  const [approve, setApprove] = useState<boolean>(false);
+
+  const admin = 1234;
+  useEffect(() => {
+    const userId = searchParams.get("id");
+    if (userId && !ledgers) {
+      fetchLedgers(userId);
+    }
+  }, [searchParams]);
+  useEffect(() => {
+    setTotal(cash + upi + cancelled + credit + cheque);
+  }, [cash, upi, cancelled, credit, cheque]);
+  const fetchLedgers = async (id: string) => {
+    try {
+      const res = await axios.get(`/api/ledger/${id}`);
+      if (!res) {
+        return;
+      }
+      setLedgers(res.data.data);
+      setApprove(res.data.data?.Approved);
+      console.log(res.data.data?.Ledger_entries);
+      const noteDenominations: any = ["500", "200", "100", "50", "20", "10", "5"];
+      const coinDenominations: any = ["20", "10", "5", "2", "1", "0.50", "0.25"];
+      setParties(res.data.data?.Ledger_entries?.length || 0);
+      const notesTotal = noteDenominations.reduce((sum: any, denom: any) => {
+        const qty = Number(res.data.data.cashCollection?.notes[denom]) || 0;
+        return sum + qty * parseFloat(denom);
+      }, 0);
+
+      let coinsTotal = 0;
+      coinDenominations.map((denom: number) => {
+        const numbers = Number(denom).toFixed(2);
+        const simpleNumber = +numbers * 100;
+
+        const qty =
+          Number(denom) >= 1
+            ? res.data.data.cashCollection?.coins[denom]
+            : res.data.data.cashCollection?.coins[0]?.[simpleNumber] ?? 0;
+        const newtotal = qty * Number(denom);
+        coinsTotal += newtotal;
+      });
+      const grandTotal = notesTotal + coinsTotal;
+      setCash(grandTotal);
+      const valueForUPI = res.data.data?.Ledger_entries.flatMap((entry: any) =>
+        entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "UPI")
+      );
+      const valueForCheque = res.data.data?.Ledger_entries.flatMap((entry: any) =>
+        entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "CHEQUE")
+      );
+
+      const valueForCredit = res.data.data?.Ledger_entries.flatMap((entry: any) =>
+        entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "credit")
+      );
+
+      const valueForCancel = res.data.data?.Ledger_entries.flatMap((entry: any) =>
+        entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "cancel")
+      );
+
+      setUPI(valueForUPI?.[0].amount ?? 0);
+      setCancelled(valueForCancel?.[0].amount ?? 0);
+      setCredit(valueForCredit?.[0].amount ?? 0);
+      setCheque(valueForCheque?.[0].amount ?? 0);
+    } catch (err) {
+      console.error("Error fetching ledgers:", err);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (admin !== +password) {
+      toast.error("invalid password");
+      return;
+    }
+    const id = searchParams.get("id");
+    if (id) {
+      const res = await axios.post(
+        `/api/ledger/${id}`,
+        { Approved: true },
+        { responseType: "blob" } // 👈 this is key
+      );
+
+      // Then convert blob to download
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "ledger-export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      const state = { id: id };
+      const params = new URLSearchParams(state).toString();
+      router.push(`/report?${params}`);
+    }
+  };
   return (
     <div className="bg-white p-4 font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
@@ -9,7 +123,7 @@ export default function Report() {
 
         {/* Table Header */}
         <div
-          className="flex flex-col items-start self-stretch mb-[43px]"
+          className="flex flex-col items-start self-stretch mb-[43px] pb-4"
           style={{
             boxShadow: "0px 4px 4px #00000040",
           }}>
@@ -18,83 +132,74 @@ export default function Report() {
             <span className="text-black text-xl font-bold w-[198px]">
               {"Total Parties Cleared:"}
             </span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {parties}
+            </div>
           </div>
           <div className="flex items-center mb-[13px] ml-[21px] gap-[9px]">
             <span className="text-black text-xl font-bold w-52">{"Total Cash Collected:"}</span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {cash}
+            </div>
           </div>
           <div className="flex items-center mb-[13px] ml-5 gap-[13px]">
             <span className="text-black text-xl font-bold w-52">{"Total UPI Transactions:"}</span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {upi}
+            </div>
           </div>
           <div className="flex items-center mb-[23px] ml-[21px] gap-[17px]">
             <span className="text-black text-xl font-bold w-[138px]">{"Cancelled Bills:"}</span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {cancelled}
+            </div>
           </div>
           <div className="flex items-center mb-7 ml-5 gap-[13px]">
             <span className="text-black text-xl font-bold w-[129px]">{"Credited Bills:"}</span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {credit}
+            </div>
           </div>
           <div className="flex items-center ml-5 gap-[13px]">
             <span className="text-black text-xl font-bold">{"Cheques Collected:"}</span>
-            <input
-              type="number"
-              className="w-full border-2 border-solid border-black rounded px-2 py-1 text-sm"
-            />
+            <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
+              {cheque}
+            </div>
           </div>
         </div>
         <div className="flex justify-between items-start self-stretch mb-[50px] mx-[21px]">
           <span className="flex-1 text-black text-[32px] font-bold mr-1">{"TOTAL AMOUNT:"}</span>
-          <span className="flex-1 text-[#B03939] text-[32px] font-bold text-right">{"₹0.00"}</span>
+          <span className="flex-1 text-[#B03939] text-[32px] font-bold text-right">₹{total}</span>
         </div>
-        <div className="flex flex-col items-center self-stretch bg-[#D9D9D9] py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
-          <div className="flex items-start self-stretch">
-            <span className="flex-1 text-black text-xl font-bold mr-[35px]">
-              {"Admin\nPassword:"}
-            </span>
-            <div
-              className="w-[49px] h-[46px] my-1 mr-[15px] rounded-lg border-2 border-solid border-[#6E6E6E]"
-              style={{
-                boxShadow: "0px 4px 8px #00000040",
-              }}></div>
-            <div
-              className="w-[49px] h-[46px] mt-1 mr-[15px] rounded-lg border-2 border-solid border-[#6E6E6E]"
-              style={{
-                boxShadow: "0px 4px 8px #00000040",
-              }}></div>
-            <div
-              className="w-[49px] h-[46px] mt-1 mr-3.5 rounded-lg border-2 border-solid border-[#6E6E6E]"
-              style={{
-                boxShadow: "0px 4px 8px #00000040",
-              }}></div>
-            <div
-              className="w-[49px] h-[46px] mt-1 rounded-lg border-2 border-solid border-[#6E6E6E]"
-              style={{
-                boxShadow: "0px 4px 8px #00000040",
-              }}></div>
+        {true && (
+          <div className="flex flex-col items-center self-stretch bg-[#D9D9D9] py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
+            <div className="flex items-start self-stretch">
+              <span className="flex-1 text-black text-xl font-bold">{"Admin\nPassword:"}</span>
+              <OTPInput
+                inputStyle={{
+                  width: "3rem",
+                  height: "3rem",
+                  margin: "0 1rem",
+                  fontSize: "2rem",
+                  borderRadius: 4,
+                  border: "1px solid rgba(0,0,0,0.3)",
+                }}
+                value={password}
+                numInputs={4}
+                inputType="password"
+                onChange={setPassword}
+                renderInput={(props: any) => <input {...props} />}
+              />
+            </div>
+            <button
+              onClick={() => handleApprove()}
+              className="flex flex-col items-start bg-[#137AA8] text-left py-[19px] px-2 rounded-[10px] border-0">
+              <span className="text-white text-xl font-bold text-center w-[207px]">
+                {"Check and Upload"}
+              </span>
+            </button>
           </div>
-          <button className="flex flex-col items-start bg-[#137AA8] text-left py-[19px] px-2 rounded-[10px] border-0">
-            <span className="text-white text-xl font-bold text-center w-[207px]">
-              {"Check and Upload"}
-            </span>
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

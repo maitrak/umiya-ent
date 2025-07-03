@@ -1,17 +1,28 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { set } from "mongoose";
+import { useFormikContext } from "formik";
 
+const SubmitOnChange = () => {
+  const { values, submitForm } = useFormikContext();
+
+  useEffect(() => {
+    submitForm(); // triggers onSubmit
+  }, [values]);
+
+  return null;
+};
 export default function Summary() {
   const searchParams = useSearchParams();
 
   const [ledgers, setLedgers] = useState<any>(null);
   const [subTotal, setSubTotal] = useState<number>(0);
   const [grandTotal, setGrandTotal] = useState<number>(0);
+  const [cashCollection, setCashCollection] = useState<any>(null);
 
   const [total, setTotal] = useState<number>(0);
   const noteDenominations: any = ["500", "200", "100", "50", "20", "10", "5"];
@@ -51,19 +62,42 @@ export default function Summary() {
       fetchLedgers(userId);
     }
   }, [searchParams]);
+  const router = useRouter();
 
   const fetchLedgers = async (id: string) => {
     try {
-      const res = await axios.get("/api/ledger");
-      setLedgers(res.data.data[0]);
-      setTotal(res.data.data[0].amount);
-      const sum = res.data.data[0].Ledger_entries.map((el: any) => {
+      const res = await axios.get(`/api/ledger/${id}`);
+      if (!res) {
+        return;
+      }
+
+      if (res.data.data?.isGenerated) {
+        const state = { id: id };
+        const params = new URLSearchParams(state).toString();
+        router.push(`/report?${params}`);
+      }
+
+      setLedgers(res.data.data);
+      setTotal(res.data.data.amount);
+      const sum = res.data.data.Ledger_entries.map((el: any) => {
         return el.Ledger_entries_transaction[0].amount;
       }).reduce((total: number, num: number) => total + num, 0);
       setSubTotal(sum);
-      console.log(sum, res.data.data[0].amount);
     } catch (err) {
       console.error("Error fetching ledgers:", err);
+    }
+  };
+
+  const handleSave = async () => {
+    const id = searchParams.get("id");
+    if (id) {
+      await axios.post(`/api/ledger/${id}`, {
+        isGenerated: true,
+        cashCollection,
+      });
+      const state = { id: id };
+      const params = new URLSearchParams(state).toString();
+      router.push(`/report?${params}`);
     }
   };
   return (
@@ -87,7 +121,7 @@ export default function Summary() {
         <Formik
           initialValues={initialValues}
           validationSchema={schema}
-          onSubmit={(values) => {
+          onSubmit={async (values) => {
             const notesTotal = noteDenominations.reduce((sum: any, denom: any) => {
               const qty = Number(values.notes[denom]) || 0;
               return sum + qty * parseFloat(denom);
@@ -97,18 +131,20 @@ export default function Summary() {
             coinDenominations.map((denom: number) => {
               const numbers = Number(denom).toFixed(2);
               const simpleNumber = +numbers * 100;
+
               const qty =
-                Number(Number(denom) > 1 ? values.coins[denom] : values.coins[0][simpleNumber]) ||
-                0;
+                Number(denom) >= 1 ? values.coins[denom] : values.coins[0]?.[simpleNumber] ?? 0;
               const newtotal = qty * Number(denom);
               coinsTotal += newtotal;
             });
             const grandTotal = notesTotal + coinsTotal;
             setGrandTotal(grandTotal);
+            setCashCollection(values);
           }}>
           {({ errors, touched }) => (
             <Form className="flex flex-col items-start self-stretch mb-[58px] mx-[21px] gap-3">
               {/* Header */}
+              <SubmitOnChange /> {/* 🔁 Add this line here */}
               <div className="flex items-center ml-[1px]">
                 <img
                   src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/rVQPeSHqF4/aaqrg1zf_expires_30_days.png"
@@ -121,7 +157,6 @@ export default function Summary() {
                 />
                 <span className="text-black text-base w-10">Coins</span>
               </div>
-
               {/* Inputs */}
               <div className="flex items-start self-stretch gap-3">
                 {/* Notes */}
@@ -161,6 +196,7 @@ export default function Summary() {
                           name={`coins.${denomination}`}
                           className="w-full border rounded px-2 py-1 text-sm"
                           min={0}
+                          values={0}
                         />
                       </div>
                       <ErrorMessage
@@ -172,19 +208,23 @@ export default function Summary() {
                   ))}
                 </div>
               </div>
-
               {/* Submit */}
-              <button
-                type="submit"
-                className="mt-4 px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded">
-                Submit
-              </button>
+              <button type="submit" disabled className="hidden"></button>
             </Form>
           )}
         </Formik>
         <div className="flex items-start ml-[21px] gap-[18px]">
           <span className="text-black text-[32px] font-bold">Collected:</span>
-          <span className="text-black text-[32px] font-bold">₹0.00</span>
+          <span className="text-black text-[32px] font-bold">₹{grandTotal}</span>
+        </div>
+        <div className="flex flex-col items-center self-stretch py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
+          <button
+            onClick={() => handleSave()}
+            className="flex flex-col items-start bg-[#137AA8] text-left py-[19px] px-2 rounded-[10px] border-0">
+            <span className="text-white text-xl font-bold text-center w-[207px]">
+              {"Generate Report"}
+            </span>
+          </button>
         </div>
       </div>
     </div>
