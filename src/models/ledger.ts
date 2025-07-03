@@ -1,7 +1,7 @@
 // models/Ledger.ts
 
 import { Schema, model, models } from "mongoose";
-
+const { Mixed } = Schema.Types;
 // Define schema
 const LedgerSchema = new Schema(
   {
@@ -17,11 +17,24 @@ const LedgerSchema = new Schema(
       type: Number,
       required: true,
     },
+    isGenerated: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    Approved: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    cashCollection: {
+      type: Mixed,
+      required: false,
+    },
   },
   { timestamps: true }
 );
 
-// ✅ Add virtual field for population
 LedgerSchema.virtual("Ledger_entries", {
   ref: "Ledger_entries", // model name of child
   localField: "_id", // primary key on Ledger
