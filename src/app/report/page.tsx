@@ -28,6 +28,8 @@ export default function Report() {
     }
   }, [searchParams]);
   useEffect(() => {
+    console.log({ cash, upi, cancelled, credit, cheque });
+
     setTotal(cash + upi + cancelled + credit + cheque);
   }, [cash, upi, cancelled, credit, cheque]);
   const fetchLedgers = async (id: string) => {
@@ -107,6 +109,7 @@ export default function Report() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      fetchLedgers(id);
       const state = { id: id };
       const params = new URLSearchParams(state).toString();
       router.push(`/report?${params}`);
