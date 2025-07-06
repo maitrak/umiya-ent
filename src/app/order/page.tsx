@@ -159,7 +159,7 @@ export default function AccordionUI() {
     setLedgers((prev: any) => ({
       ...prev,
       Ledger_entries: prev.Ledger_entries.map((entry: any) => {
-        const total = parseInt(entry.amount);
+        // const total = parseInt(entry.amount);
         const found = parseInt(amount);
         return entry._id === id
           ? {
@@ -182,7 +182,7 @@ export default function AccordionUI() {
     cheque: string
   ) => {
     const found = entry?.transaction ?? [];
-    const out = found.filter((el: any) => el.label !== label);
+    // const out = found.filter((el: any) => el.label !== label);
     
     // return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
     return { transaction: [ { label, id, amount, cheque }] };
