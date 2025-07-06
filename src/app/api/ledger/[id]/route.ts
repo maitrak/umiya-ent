@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           path: "Ledger_entries_transaction",
         },
       });
-      let ledgerData: any[] = [];
+      const ledgerData: any[] = [];
       ledgerWithEntries?.Ledger_entries?.map((entry: any, index: number) => {
         ledgerData.push({
           "SR.": index + 1,
