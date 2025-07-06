@@ -27,9 +27,6 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   const [open, setOpen] = useState(false);
   const [amountSettle, setAmount] = useState(amount);
   const [payload, setPayload] = useState(null);
-  const [oldstate, setOldState] = useState<
-    { attr: string; label: string; amountSettle: string } | undefined
-  >(undefined);
 
   const handleAmount = (value: string) => {
     if (value > amount) {
@@ -181,7 +178,7 @@ export default function AccordionUI() {
     ispos: any,
     cheque: string
   ) => {
-    const found = entry?.transaction ?? [];
+    // const found = entry?.transaction ?? [];
     // const out = found.filter((el: any) => el.label !== label);
     
     // return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
