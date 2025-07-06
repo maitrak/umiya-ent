@@ -2,6 +2,7 @@ import connectToDatabase from "@/lib/mongodb";
 import Ledger from "@/models/ledger";
 import "@/models/ledger_entries";
 import "@/models/ledger_entries_transaction";
+import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 // GET /api/transaction/[id]
@@ -38,32 +39,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       { new: true, runValidators: true } // return updated document
     );
     if (body?.Approved) {
-      const ledgerData = [
-        {
-          date: "2025-07-03",
-          billNo: "30-JR25263678",
-          party: "COUNTER SALES (KAUSHAL BHAI)",
-          amount: 2495,
-          cash: 2495,
-          upi: 0,
-          cheque: 0,
-          credit: 0,
-          cancelled: 0,
-          salesMan: "JAIMIN PATEL",
+      const ledgerWithEntries = await Ledger.findById(params.id).populate({
+        path: "Ledger_entries",
+        populate: {
+          path: "Ledger_entries_transaction",
         },
-        {
-          date: "2025-07-03",
-          billNo: "500013-AB25",
-          party: "AARAV PHARMACY & DRUGGIST.",
-          amount: 2348,
-          cash: 0,
-          upi: 2348,
-          cheque: 0,
-          credit: 0,
-          cancelled: 0,
-          salesMan: "HETANSHI PATEL",
-        },
-      ];
+      });
+      let ledgerData: any[] = [];
+      ledgerWithEntries?.Ledger_entries?.map((entry: any, index: number) => {
+        ledgerData.push({
+          "SR.": index + 1,
+          "Bill Date": moment(entry.date).format("DD-MM-YYYY"),
+          "Bill No.": entry.billNo,
+          Party: entry.party,
+          "Bill Amount": entry.amount,
+          "Previous Received": 0,
+          Salesman: entry.sales_man,
+          "Pending Amount": entry.pending,
+          "Full Payment": "P-PART",
+          Cash: "0",
+          Discount: "0",
+          "Cheque Amount": 0,
+          "Cheque No.": 0,
+          "Cheque Date": "",
+          Bank: " ",
+          Branch: " ",
+          "Payment Remark": "",
+          "TCS On Bill With TCS": "0",
+          Mode: entry?.Ledger_entries_transaction?.[0]?.type,
+        });
+      });
       if (!Array.isArray(ledgerData)) {
         return NextResponse.json(
           { success: false, error: "Invalid JSON format. Must be an array." },
