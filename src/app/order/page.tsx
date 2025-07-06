@@ -27,6 +27,10 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
   const [open, setOpen] = useState(false);
   const [amountSettle, setAmount] = useState(amount);
   const [payload, setPayload] = useState(null);
+  const [oldstate, setOldState] = useState<
+    { attr: string; label: string; amountSettle: string } | undefined
+  >(undefined);
+
   const handleAmount = (value: string) => {
     if (value > amount) {
       toast.error("Amount is greater than the amount in the ledger");
@@ -34,7 +38,6 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
       setAmount(value);
     }
   };
-
   useEffect(() => {
     if (data !== null) {
       setPayload(data.find((el: any) => el.type === label));
@@ -57,13 +60,14 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
         <div className="flex items-center space-x-2">
           {!!payload ? (
             <input
-              type="checkbox"
-              onChange={(e) => handleCheck(e.target.checked)}
+              type="radio"
+              name={attr}
+              onChange={(e) => handleCheck(e)}
               disabled={!!payload}
               checked={!!payload}
             />
           ) : (
-            <input type="checkbox" onChange={(e) => handleCheck(e.target.checked)} />
+            <input type="radio" name={attr} onChange={(e) => handleCheck(e)} />
           )}
 
           <span className="flex items-center">
@@ -160,7 +164,8 @@ export default function AccordionUI() {
         return entry._id === id
           ? {
               ...entry,
-              amount: ispos ? total + found : total - found,
+              // amount: ispos ? total + found : total - found,
+              amount:found,
               ...handlemayBeSaved(entry, label, id, amount, ispos, cheque),
             }
           : entry;
@@ -178,7 +183,9 @@ export default function AccordionUI() {
   ) => {
     const found = entry?.transaction ?? [];
     const out = found.filter((el: any) => el.label !== label);
-    return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
+    
+    // return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
+    return { transaction: [ { label, id, amount, cheque }] };
   };
 
   const handleCheck = (e: any, attr: any, label: any, amountSettle: any, cheque: any) => {
@@ -187,6 +194,8 @@ export default function AccordionUI() {
 
   const handleSave = async (id: any) => {
     const payload = ledgers.Ledger_entries.find((el: any) => el._id === id);
+    console.log(ledgers);
+    
     await fetch("/api/transaction/" + id, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -529,8 +538,9 @@ export default function AccordionUI() {
                   {/* Credit & Cancelled */}
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
-                      type="checkbox"
+                      type="radio"
                       onChange={(e) => handleCheck(e.target.checked, entry._id, "credit", 0, null)}
+                      name={entry._id}
                     />
                     <span className="flex">
                       <svg
@@ -554,8 +564,9 @@ export default function AccordionUI() {
                   </div>
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
-                      type="checkbox"
+                      type="radio"
                       onChange={(e) => handleCheck(e.target.checked, entry._id, "cancel", 0, null)}
+                      name={entry._id}
                     />
                     <span className="flex">
                       <div className="items-right mr-[15px] ml-[20px]">
