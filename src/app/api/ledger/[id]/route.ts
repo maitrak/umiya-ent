@@ -66,6 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           Branch: " ",
           "Payment Remark": "",
           "TCS On Bill With TCS": "0",
+          Company: entry.type,
           Mode: entry?.Ledger_entries_transaction?.[0]?.type,
         });
       });

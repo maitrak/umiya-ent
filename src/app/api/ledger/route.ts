@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
         party: entry?.["Party"] ? entry["Party"] : "",
         discount: entry?.["Discount"] ? entry["Discount"] : 0,
-        type: entry?.["Party"] ? entry["Party"] : "",
+        type: entry?.["Company"] ? entry["Company"] : "",
         sales_man: entry?.["Salesman"] ? entry["Salesman"] : "",
         ledger_id: entries?.id,
         user: entry?.["User ID"] ? entry["User ID"] : 0,
