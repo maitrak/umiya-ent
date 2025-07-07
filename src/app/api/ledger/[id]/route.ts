@@ -67,7 +67,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           "Payment Remark": "",
           "TCS On Bill With TCS": "0",
           Company: entry.type,
-          Mode: entry?.Ledger_entries_transaction?.[0]?.type,
+          Mode:
+            entry?.Ledger_entries_transaction?.[0]?.type.charAt(0).toUpperCase() +
+            entry?.Ledger_entries_transaction?.[0]?.type.slice(1).toLowerCase(),
         });
       });
       if (!Array.isArray(ledgerData)) {

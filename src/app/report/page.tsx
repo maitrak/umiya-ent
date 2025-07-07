@@ -116,7 +116,7 @@ export default function Report() {
     }
   };
   return (
-    <div className="bg-white p-4 font-sans min-h-screen">
+    <div className="bg-white font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
         {/* Date Header */}
         <div className="bg-[#137AA8] text-white text-center py-2 font-semibold text-lg">
@@ -138,38 +138,42 @@ export default function Report() {
               {parties}
             </div>
           </div>
-          <div className="flex items-center mb-[13px] ml-[21px] gap-[9px]">
-            <span className="text-black text-xl font-bold w-52">{"Total Cash Collected:"}</span>
+          <div className="flex items-center mb-[13px] ml-[21px]  gap-[15px]">
+            <span className="text-black text-xl font-bold w-[198px]">
+              {"Total Cash Collected:"}
+            </span>
             <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
               {cash}
             </div>
           </div>
-          <div className="flex items-center mb-[13px] ml-5 gap-[13px]">
-            <span className="text-black text-xl font-bold w-52">{"Total UPI Transactions:"}</span>
+          <div className="flex items-center mb-[13px] ml-5 gap-[15px]">
+            <span className="text-black text-xl font-bold w-[198px]">
+              {"Total UPI Transactions:"}
+            </span>
             <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
               {upi}
             </div>
           </div>
-          <div className="flex items-center mb-[23px] ml-[21px] gap-[17px]">
-            <span className="text-black text-xl font-bold w-[138px]">{"Cancelled Bills:"}</span>
+          <div className="flex items-center mb-[23px] ml-[21px]  gap-[15px]">
+            <span className="text-black text-xl font-bold w-[198px]">{"Cancelled Bills:"}</span>
             <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
               {cancelled}
             </div>
           </div>
-          <div className="flex items-center mb-7 ml-5 gap-[13px]">
-            <span className="text-black text-xl font-bold w-[129px]">{"Credited Bills:"}</span>
+          <div className="flex items-center mb-7 ml-5 gap-[15px]">
+            <span className="text-black text-xl font-bold w-[198px]">{"Credited Bills:"}</span>
             <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
               {credit}
             </div>
           </div>
-          <div className="flex items-center ml-5 gap-[13px]">
-            <span className="text-black text-xl font-bold">{"Cheques Collected:"}</span>
+          <div className="flex items-center ml-5 gap-[15px]">
+            <span className="text-black text-xl font-bold w-[198px]">{"Cheques Collected:"}</span>
             <div className="bg-white w-[88px] h-[27px] border-2 border-solid border-black text-right pr-3">
               {cheque}
             </div>
           </div>
         </div>
-        <div className="flex justify-between items-start self-stretch mb-[50px] mx-[21px]">
+        <div className=" justify-between items-start self-stretch mb-[50px] mx-[21px]">
           <span className="flex-1 text-black text-[32px] font-bold mr-1">{"TOTAL AMOUNT:"}</span>
           <span className="flex-1 text-[#B03939] text-[32px] font-bold text-right">₹{total}</span>
         </div>
