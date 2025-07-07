@@ -9,13 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Loader } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useEffect } from "react";
 
 const UserButton = () => {
   const router = useRouter();
-  const { data: session, status,update } = useSession();
+  const { data: session, status } = useSession();
   
   
   useEffect(() => {
