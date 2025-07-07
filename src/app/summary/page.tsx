@@ -100,7 +100,7 @@ export default function Summary() {
     }
   };
   return (
-    <div className="bg-white p-4 font-sans min-h-screen">
+    <div className="bg-white font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
         {/* Date Header */}
         <div className="bg-[#137AA8] text-white text-center py-2 font-semibold text-lg">
