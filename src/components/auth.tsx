@@ -19,7 +19,7 @@ const Auth = ({
   if ((session?.user as any)?.role !== "ADMIN" && isAdminRoute) {
     return (
       <ErrorPage401>
-        {/* <UserButton /> */}
+        <UserButton />
       </ErrorPage401>
     );
   }
