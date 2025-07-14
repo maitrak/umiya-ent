@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
 import { Loader } from "lucide-react"; // Or your loader import
 import {
   DropdownMenu,
@@ -13,7 +11,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const UserButton = () => {
-  const router = useRouter();
   const { data: session, status } = useSession();
 
   const avatarFallback = session?.user?.name?.charAt(0).toUpperCase();
