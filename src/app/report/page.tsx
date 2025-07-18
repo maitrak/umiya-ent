@@ -79,7 +79,7 @@ export default function Report() {
         entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "cancel")
       );
 
-      setUPI(valueForUPI?.[0].amount ?? 0);
+      setUPI(valueForUPI?.length ?? 0);
       setCancelled(valueForCancel?.[0].amount ?? 0);
       setCredit(valueForCredit?.[0].amount ?? 0);
       setCheque(valueForCheque?.[0].amount ?? 0);

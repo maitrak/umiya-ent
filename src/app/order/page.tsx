@@ -536,7 +536,9 @@ export default function AccordionUI() {
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="radio"
-                      onChange={(e) => handleCheck(e.target.checked, entry._id, "credit", 0, null)}
+                      onChange={(e) =>
+                        handleCheck(e.target.checked, entry._id, "credit", entry?.pending, null)
+                      }
                       name={entry._id}
                     />
                     <span className="flex">
@@ -562,7 +564,9 @@ export default function AccordionUI() {
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
                       type="radio"
-                      onChange={(e) => handleCheck(e.target.checked, entry._id, "cancel", 0, null)}
+                      onChange={(e) =>
+                        handleCheck(e.target.checked, entry._id, "cancel", entry?.pending, null)
+                      }
                       name={entry._id}
                     />
                     <span className="flex">
