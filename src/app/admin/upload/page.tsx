@@ -17,7 +17,7 @@ const Upload = () => {
     const fileName = file.name;
     const extension = fileName.split(".").pop().toLowerCase();
 
-    if (extension === "xls" || extension === "xlsx") {
+    if (extension === "xlsx") {
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
@@ -35,7 +35,7 @@ const Upload = () => {
         skipEmptyLines: false,
       });
     } else {
-      alert("Unsupported file type. Please upload .csv, .xls, or .xlsx");
+      alert("Unsupported file type. Please upload .csv or .xlsx");
     }
   };
   const normalizeExcelData = (excelData: ExcelRow[]): ExcelRow[] => {
@@ -98,7 +98,7 @@ const Upload = () => {
             {new Date().getDate()}-{new Date().getMonth() + 1}-{new Date().getFullYear()}
           </Typography>
 
-          <input type="file" accept=".csv, .xls, .xlsx" onChange={handleFile} />
+          <input type="file" accept=".csv, .xlsx" onChange={handleFile} />
 
           <Button
             variant="contained"

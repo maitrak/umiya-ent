@@ -20,7 +20,7 @@ const SubmitOnChange = () => {
 export default function Summary() {
   const searchParams = useSearchParams();
   const ledgerId = searchParams.get("id");
-  const orderHref = "http://localhost:3001/order";
+  const orderHref = "/order";
 
   const [ledgers, setLedgers] = useState<any>(null);
   const [subTotal, setSubTotal] = useState<number>(0);

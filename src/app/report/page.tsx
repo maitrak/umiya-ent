@@ -12,8 +12,8 @@ export default function Report() {
   const router = useRouter();
   const ledgerId = searchParams.get("id");
   const backHref = ledgerId
-    ? `http://localhost:3001/summary?id=${ledgerId}`
-    : "http://localhost:3001/summary";
+    ? `/summary?id=${ledgerId}`
+    : "/summary";
 
   const [ledgers, setLedgers] = useState<any>(null);
   const [parties, setParties] = useState<number>(0);
@@ -116,27 +116,31 @@ export default function Report() {
       toast.error("invalid password");
       return;
     }
-    const id = searchParams.get("id");
-    if (id) {
-      const res = await axios.post(
-        `/api/ledger/${id}`,
-        { Approved: true },
-        { responseType: "blob" } // 👈 this is key
-      );
+    await downloadLedgerXls(true);
+  };
 
-      // Then convert blob to download
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "ledger-export.xlsx");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      fetchLedgers(id);
-      const state = { id: id };
-      const params = new URLSearchParams(state).toString();
-      router.push(`/report?${params}`);
-    }
+  const downloadLedgerXls = async (shouldApprove: boolean) => {
+    const id = searchParams.get("id");
+    if (!id) return;
+
+    const res = await axios.post(
+      `/api/ledger/${id}`,
+      { Approved: true },
+      { responseType: "blob" }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "ledger-export.xls");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    fetchLedgers(id);
+    const state = { id: id };
+    const params = new URLSearchParams(state).toString();
+    router.push(`/report?${params}`);
   };
   return (
     <div className="bg-white font-sans min-h-screen">
@@ -208,7 +212,7 @@ export default function Report() {
           <span className="flex-1 text-black text-[32px] font-bold mr-1">{"TOTAL AMOUNT:"}</span>
           <span className="flex-1 text-[#B03939] text-[32px] font-bold text-right">₹{total}</span>
         </div>
-        {!approve && (
+        {!approve ? (
           <div className="flex flex-col items-center self-stretch bg-[#D9D9D9] py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
             <div className="flex items-start self-stretch">
               <span className="flex-1 text-black text-xl font-bold">{"Admin\nPassword:"}</span>
@@ -233,6 +237,16 @@ export default function Report() {
               className="flex flex-col items-start bg-[#137AA8] text-left py-[19px] px-2 rounded-[10px] border-0">
               <span className="text-white text-xl font-bold text-center w-[207px]">
                 {"Check and Upload"}
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center self-stretch bg-[#D9D9D9] py-[41px] px-[21px] mx-[1px] gap-[38px] rounded-lg">
+            <button
+              onClick={() => downloadLedgerXls(false)}
+              className="flex flex-col items-start bg-[#137AA8] text-left py-[19px] px-2 rounded-[10px] border-0">
+              <span className="text-white text-xl font-bold text-center w-[207px]">
+                {"Download XLS"}
               </span>
             </button>
           </div>

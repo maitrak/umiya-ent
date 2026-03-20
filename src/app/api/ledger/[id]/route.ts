@@ -5,6 +5,33 @@ import "@/models/ledger_entries_transaction";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+
+const buildCashCollectionRows = (cashCollection: any) => {
+  const noteDenominations = ["500", "200", "100", "50", "20", "10", "5"];
+  const coinDenominations = ["20", "10", "5", "2", "1", "0.50", "0.25"];
+
+  const noteRows = noteDenominations.map((denomination) => {
+    const quantity = Number(cashCollection?.notes?.[denomination] ?? 0);
+    return {
+      Category: "Notes",
+      Denomination: denomination,
+      Quantity: quantity,
+      Total: quantity * Number(denomination),
+    };
+  });
+
+  const coinRows = coinDenominations.map((denomination) => {
+    const quantity = Number(cashCollection?.coins?.[denomination] ?? 0);
+    return {
+      Category: "Coins",
+      Denomination: denomination,
+      Quantity: quantity,
+      Total: quantity * Number(denomination),
+    };
+  });
+
+  return [...noteRows, ...coinRows];
+};
 // GET /api/transaction/[id]
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -47,6 +74,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       });
       const ledgerData: any[] = [];
       ledgerWithEntries?.Ledger_entries?.map((entry: any, index: number) => {
+        const transactions = entry?.Ledger_entries_transaction ?? [];
+        const mode = transactions
+          .map((transaction: any) =>
+            transaction?.type
+              ? transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1).toLowerCase()
+              : ""
+          )
+          .filter(Boolean)
+          .join(", ");
+        const transactionCreatedAt = transactions
+          .map((transaction: any) =>
+            transaction?.createdAt ? moment(transaction.createdAt).format("YYYY-MM-DDTHH:mm:ss.SSSZ") : ""
+          )
+          .filter(Boolean)
+          .join(", ");
+
         ledgerData.push({
           "SR.": index + 1,
           "Bill Date": moment(entry.date).format("DD-MM-YYYY"),
@@ -67,9 +110,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           "Payment Remark": "",
           "TCS On Bill With TCS": "0",
           Company: entry.type,
-          Mode:
-            entry?.Ledger_entries_transaction?.[0]?.type.charAt(0).toUpperCase() +
-            entry?.Ledger_entries_transaction?.[0]?.type.slice(1).toLowerCase(),
+          Mode: mode,
+          "Transaction Created At": transactionCreatedAt,
         });
       });
       if (!Array.isArray(ledgerData)) {
@@ -81,15 +123,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
       // Create worksheet and workbook
       const ws = XLSX.utils.json_to_sheet(ledgerData);
+      const cashCollectionRows = buildCashCollectionRows(ledgerWithEntries?.cashCollection);
+      const cashCollectionSheet = XLSX.utils.json_to_sheet(cashCollectionRows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Ledger");
-      const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+      XLSX.utils.book_append_sheet(
+        wb,
+        cashCollectionSheet,
+        "Cash Collection sheet"
+      );
+      const buffer = XLSX.write(wb, { type: "buffer", bookType: "xls" });
 
       return new NextResponse(buffer, {
         status: 200,
         headers: {
-          "Content-Disposition": "attachment; filename=ledger-export.xlsx",
-          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": "attachment; filename=ledger-export.xls",
+          "Content-Type": "application/vnd.ms-excel",
         },
       });
     }
