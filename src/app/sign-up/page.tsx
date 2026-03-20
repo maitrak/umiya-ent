@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { TriangleAlert } from "lucide-react";
+import BackButton from "@/components/back-button";
 
 const SignUp = () => {
   const [form, setForm] = useState({
@@ -53,6 +54,7 @@ const SignUp = () => {
   return (
     <div className="LOGIN">
       <div className="div">
+        <BackButton fallbackHref="/sign-in" className="absolute left-4 top-4 z-10" />
         <div className="group">
           {!!error && (
             <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">

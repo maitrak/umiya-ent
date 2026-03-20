@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import BackButton from "@/components/back-button";
 type ExcelRow = Record<string, string | number | null>;
 const Upload = () => {
   const [data, setData] = useState<any>({});
@@ -92,6 +93,7 @@ const Upload = () => {
     <div className="items-center justify-center flex h-screen">
       <SessionProvider>
         <Paper elevation={3} sx={{ p: 3, maxWidth: 400, borderRadius: 2 }}>
+          <BackButton fallbackHref="/" className="mb-4" />
           <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
             {new Date().getDate()}-{new Date().getMonth() + 1}-{new Date().getFullYear()}
           </Typography>

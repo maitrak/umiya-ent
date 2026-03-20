@@ -21,14 +21,22 @@ export async function POST(req: NextRequest) {
     }
 
     const found = await Ledger.findOne({ date: formatted });
+    const ledger =
+      found ??
+      (await Ledger.create({
+        date: formatted,
+        amount: 0,
+        pending: 0,
+      }));
+
     if (found) {
-      return NextResponse.json({ success: true, data: [], message: "found data" });
+      await Ledger.updateOne({ _id: found.id }, { $set: { amount: found.amount + totalAmount } });
+    } else {
+      await Ledger.updateOne({ _id: ledger.id }, { $set: { amount: totalAmount } });
     }
 
-    const entries = await Ledger.create({ date: formatted, amount: totalAmount, pending: 0 });
-
     for (const entry of body) {
-      LedgerEntries.create({
+      await LedgerEntries.create({
         amount: 0,
         pending: entry?.["Pending Amount"] ? entry["Pending Amount"] : 0,
         billNo: entry?.["Bill No."] ? entry["Bill No."] : "",
@@ -36,14 +44,16 @@ export async function POST(req: NextRequest) {
         discount: entry?.["Discount"] ? entry["Discount"] : 0,
         type: entry?.["Company"] ? entry["Company"] : "",
         sales_man: entry?.["Salesman"] ? entry["Salesman"] : "",
-        ledger_id: entries?.id,
+        ledger_id: ledger?.id,
         user: entry?.["User ID"] ? entry["User ID"] : 0,
       });
     }
     return NextResponse.json({
       success: true,
-      data: entries,
-      message: "Ledger entries created successfully",
+      data: ledger,
+      message: found
+        ? "Ledger entries appended successfully"
+        : "Ledger entries created successfully",
     });
   } catch (err) {
     console.error(err);

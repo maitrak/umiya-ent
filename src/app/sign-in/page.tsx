@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { TriangleAlert } from "lucide-react";
 import OTPInput from "react-otp-input";
+import BackButton from "@/components/back-button";
 
 const SignIn = () => {
   const [email, setEmail] = useState<string>("");
@@ -51,6 +52,7 @@ const SignIn = () => {
     <div>
       <div className="LOGIN">
         <div className="div">
+          <BackButton fallbackHref="/" className="absolute left-4 top-4 z-10" />
           <div className="group">
             {!!error && (
               <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">

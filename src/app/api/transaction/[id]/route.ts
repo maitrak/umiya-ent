@@ -28,8 +28,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   try {
     const body = await req.json();
+    const transactions = Array.isArray(body) ? body : [];
     let amount = 0;
-    for (const data of body) {
+
+    await LedgerEntriesTransaction.deleteMany({ ledger_entries_id: params.id });
+
+    for (const data of transactions) {
       await LedgerEntriesTransaction.create({
         ledger_entries_id: params.id,
         type: data.label,
@@ -38,14 +42,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       });
       amount += +data.amount;
     }
-    const old = await LedgerEntries.findById(params.id);
-    const newAmount = old?.amount + amount;
 
-    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount: newAmount } });
+    await LedgerEntries.updateOne({ _id: params.id }, { $set: { amount } });
     return NextResponse.json({
       success: true,
-      data: body,
-      message: "Ledger entry transaction created successfully",
+      data: transactions,
+      message: "Ledger entry transaction saved successfully",
     });
   } catch (err) {
     console.error(err);

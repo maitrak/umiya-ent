@@ -5,67 +5,62 @@ import axios from "axios";
 import moment from "moment";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import BackButton from "@/components/back-button";
 
 interface PaymentMethodProps {
   label: string;
   emoji: string | JSX.Element; // Assuming emoji is a string (e.g., "💳" or a path to an image)
-  amount: string; // Assuming amount is a number
   multi: boolean; // Assuming multi is a boolean
-  handleClick: any; // Assuming handleClick takes a string ID and returns void
-  attr: string; // Optional: for other input attributes
-  data?: any;
+  selected: boolean;
+  inputType: "checkbox" | "radio";
+  inputName?: string;
+  amount: string;
+  cheque?: string;
+  pending: number;
+  handleToggle: (checked: boolean) => void;
+  handleAmountChange: (value: string) => void;
+  handleAmountBlur: () => void;
+  handleChequeChange?: (value: string) => void;
+  handleChequeBlur?: () => void;
 }
+
 const PaymentMethod: React.FC<PaymentMethodProps> = ({
   label,
   emoji,
   amount,
   multi,
-  handleClick,
-  attr,
-  data,
+  selected,
+  inputType,
+  inputName,
+  cheque = "",
+  pending,
+  handleToggle,
+  handleAmountChange,
+  handleAmountBlur,
+  handleChequeChange,
+  handleChequeBlur,
 }) => {
   const [open, setOpen] = useState(false);
-  const [amountSettle, setAmount] = useState(amount);
-  const [payload, setPayload] = useState(null);
 
   const handleAmount = (value: string) => {
-    if (value > amount) {
+    const numericValue = Number(value || 0);
+    if (numericValue > pending) {
       toast.error("Amount is greater than the amount in the ledger");
     } else {
-      setAmount(value);
+      handleAmountChange(value);
     }
   };
-  useEffect(() => {
-    if (data !== null) {
-      setPayload(data.find((el: any) => el.type === label));
-      if (!!data.find((el: any) => el.type === label)) {
-        setAmount(data.find((el: any) => el.type === label).amount);
-      }
-    }
-  }, [data]);
 
-  const handleCheck = (e: any) => {
-    if (e) {
-      handleClick(attr, label, amountSettle, true);
-    } else {
-      handleClick(attr, label, amountSettle, false);
-    }
-  };
   return (
     <div className="border rounded bg-white shadow-md">
-      <button className="w-full flex justify-between items-center px-2 py-2">
+      <button type="button" className="w-full flex justify-between items-center px-2 py-2">
         <div className="flex items-center space-x-2">
-          {!!payload ? (
-            <input
-              type="radio"
-              name={attr}
-              onChange={(e) => handleCheck(e)}
-              disabled={!!payload}
-              checked={!!payload}
-            />
-          ) : (
-            <input type="radio" name={attr} onChange={(e) => handleCheck(e)} />
-          )}
+          <input
+            type={inputType}
+            name={inputName}
+            checked={selected}
+            onChange={(e) => handleToggle(e.target.checked)}
+          />
 
           <span className="flex items-center">
             {emoji} {label}
@@ -90,15 +85,20 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({
               type="text"
               className="w-full border rounded px-2 py-1 text-sm"
               placeholder="Cheque No."
+              value={cheque}
+              disabled={!selected}
+              onChange={(e) => handleChequeChange?.(e.target.value)}
+              onBlur={() => handleChequeBlur?.()}
             />
           )}
           <input
             type="text"
             className="w-full border rounded px-2 py-1 text-sm"
             placeholder="Amount"
-            value={amountSettle}
-            disabled={!!payload}
+            value={amount}
+            disabled={!selected}
             onChange={(e) => handleAmount(e.target.value)}
+            onBlur={handleAmountBlur}
           />
         </div>
       )}
@@ -109,10 +109,34 @@ interface AccordionState {
   [key: string]: boolean; // This is an index signature: allows any string key with a boolean value
 }
 
+interface DraftTransaction {
+  amount: string;
+  cheque: string;
+  id: string;
+  label: string;
+}
+
+const buildDraftTransactions = (entries: any[] = []) =>
+  entries.reduce(
+    (acc: Record<string, DraftTransaction[]>, entry: any) => {
+      acc[entry._id] = (entry?.Ledger_entries_transaction ?? []).map((transaction: any) => ({
+        amount: String(transaction.amount ?? ""),
+        cheque: transaction.transactionNo ?? "",
+        id: entry._id,
+        label: transaction.type,
+      }));
+      return acc;
+    },
+    {} as Record<string, DraftTransaction[]>
+  );
+
 export default function AccordionUI() {
   const [mainOpen, setMainOpen] = useState<AccordionState>({});
   const [ledgers, setLedgers] = useState<any>({});
   const [completed, setCompleted] = useState(false);
+  const [draftTransactions, setDraftTransactions] = useState<Record<string, DraftTransaction[]>>({});
+  const [savingEntries, setSavingEntries] = useState<Record<string, boolean>>({});
+  const [allowMultipleSelection, setAllowMultipleSelection] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (ledgers?.Ledger_entries?.length > 0) {
@@ -131,11 +155,7 @@ export default function AccordionUI() {
     try {
       const res = await axios.get("/api/ledger");
       setLedgers(res.data.data[0]);
-      if (res.data.data[0]?.isGenerated) {
-        const state = { id: res.data.data[0].id };
-        const params = new URLSearchParams(state).toString();
-        router.push(`/report?${params}`);
-      }
+      setDraftTransactions(buildDraftTransactions(res.data.data[0]?.Ledger_entries ?? []));
       const toggle: AccordionState = {};
       res.data.data[0].Ledger_entries.forEach((entry: any) => {
         toggle[entry._id] = false;
@@ -149,57 +169,112 @@ export default function AccordionUI() {
   };
 
   const handleOpen = (id: string) => {
-    setMainOpen((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+    setMainOpen((prev) => {
+      const nextIsOpen = !prev[id];
 
-  const handleClick = (id: any, label: any, amount: any, ispos: boolean, cheque: string) => {
-    setLedgers((prev: any) => ({
-      ...prev,
-      Ledger_entries: prev.Ledger_entries.map((entry: any) => {
-        // const total = parseInt(entry.amount);
-        const found = parseInt(amount);
-        return entry._id === id
-          ? {
-              ...entry,
-              // amount: ispos ? total + found : total - found,
-              amount:found,
-              ...handlemayBeSaved(entry, label, id, amount, ispos, cheque),
-            }
-          : entry;
-      }),
-    }));
-  };
+      if (nextIsOpen && prev[id] === false) {
+        setAllowMultipleSelection((current) =>
+          current[id] ? current : { ...current, [id]: false }
+        );
+      }
 
-  const handlemayBeSaved = (
-    entry: any,
-    label: any,
-    id: any,
-    amount: any,
-    ispos: any,
-    cheque: string
-  ) => {
-    // const found = entry?.transaction ?? [];
-    // const out = found.filter((el: any) => el.label !== label);
-    
-    // return ispos ? { transaction: [...out, { label, id, amount, cheque }] } : { transaction: out };
-    return { transaction: [ { label, id, amount, cheque }] };
-  };
+      if (!nextIsOpen && prev[id]) {
+        setAllowMultipleSelection((current) => ({ ...current, [id]: true }));
+      }
 
-  const handleCheck = (e: any, attr: any, label: any, amountSettle: any, cheque: any) => {
-    handleClick(attr, label, amountSettle, e, cheque);
-  };
-
-  const handleSave = async (id: any) => {
-    const payload = ledgers.Ledger_entries.find((el: any) => el._id === id);
-    console.log(ledgers);
-    
-    await fetch("/api/transaction/" + id, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload.transaction),
+      return { ...prev, [id]: nextIsOpen };
     });
-    await fetchLedgers(false);
-    handleOpen(id);
+  };
+
+  const saveTransactions = async (id: string, transactions: DraftTransaction[]) => {
+    setSavingEntries((prev) => ({ ...prev, [id]: true }));
+
+    try {
+      await fetch("/api/transaction/" + id, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(transactions),
+      });
+      await fetchLedgers(false);
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+      toast.error("Failed to save transaction");
+    } finally {
+      setSavingEntries((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const getEntryTransactions = (entryId: string) => draftTransactions[entryId] ?? [];
+
+  const getEntryCollectedAmount = (entryId: string) =>
+    getEntryTransactions(entryId).reduce((total, transaction) => total + Number(transaction.amount || 0), 0);
+
+  const toggleTransaction = async (
+    entryId: string,
+    label: string,
+    checked: boolean,
+    pending: number
+  ) => {
+    const currentTransactions = getEntryTransactions(entryId);
+    let nextTransactions = currentTransactions;
+    const useCheckboxes = allowMultipleSelection[entryId];
+
+    if (checked) {
+      const existing = currentTransactions.find((transaction) => transaction.label === label);
+      if (!existing) {
+        const remaining = Math.max(
+          pending -
+            currentTransactions.reduce(
+              (total, transaction) => total + Number(transaction.amount || 0),
+              0
+            ),
+          0
+        );
+        const nextTransaction = { amount: String(remaining), cheque: "", id: entryId, label };
+        nextTransactions = useCheckboxes ? [...currentTransactions, nextTransaction] : [nextTransaction];
+      } else if (!useCheckboxes) {
+        nextTransactions = [existing];
+      }
+    } else {
+      nextTransactions = currentTransactions.filter((transaction) => transaction.label !== label);
+    }
+
+    setDraftTransactions((prev) => ({ ...prev, [entryId]: nextTransactions }));
+    await saveTransactions(entryId, nextTransactions);
+
+    if (!useCheckboxes && checked) {
+      setMainOpen((prev) => ({ ...prev, [entryId]: false }));
+      setAllowMultipleSelection((prev) => ({ ...prev, [entryId]: true }));
+    }
+  };
+
+  const updateTransactionField = (
+    entryId: string,
+    label: string,
+    field: "amount" | "cheque",
+    value: string,
+    pending: number
+  ) => {
+    const currentTransactions = getEntryTransactions(entryId);
+    const nextTransactions = currentTransactions.map((transaction) =>
+      transaction.label === label ? { ...transaction, [field]: value } : transaction
+    );
+
+    const totalAmount = nextTransactions.reduce(
+      (total, transaction) => total + Number(transaction.amount || 0),
+      0
+    );
+
+    if (field === "amount" && totalAmount > pending) {
+      toast.error("Total selected amount is greater than the amount in the ledger");
+      return;
+    }
+
+    setDraftTransactions((prev) => ({ ...prev, [entryId]: nextTransactions }));
+  };
+
+  const saveTransactionDraft = async (entryId: string) => {
+    await saveTransactions(entryId, getEntryTransactions(entryId));
   };
 
   const router = useRouter();
@@ -213,6 +288,9 @@ export default function AccordionUI() {
   return (
     <div className="bg-white font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
+        <div className="px-4 pt-4">
+          <BackButton fallbackHref="/" />
+        </div>
         {/* Date Header */}
         <div className="bg-[#137AA8] text-white text-center py-2 font-semibold text-lg">
           {ledgers?.date ? moment(ledgers.date).format("DD-mm-yyyy") : ""}
@@ -230,9 +308,22 @@ export default function AccordionUI() {
         {ledgers?.Ledger_entries &&
           ledgers?.Ledger_entries.map((entry: any) => (
             <div className="relative inset-shadow-md inset-shadow-indigo-500/50 " key={entry?._id}>
+              {(() => {
+                const entryTransactions = getEntryTransactions(entry._id);
+                const collectedAmount = getEntryCollectedAmount(entry._id);
+                const isSelected = (label: string) =>
+                  entryTransactions.some((transaction) => transaction.label === label);
+                const getTransaction = (label: string) =>
+                  entryTransactions.find((transaction) => transaction.label === label);
+                const useCheckboxes = allowMultipleSelection[entry._id];
+                const inputType = useCheckboxes ? "checkbox" : "radio";
+                const inputName = useCheckboxes ? undefined : `payment-${entry._id}`;
+
+                return (
+                  <>
               <div
                 className={` ${
-                  entry?.Ledger_entries_transaction.length > 0 ? "bg-[#137AA8]" : "bg-gray-200"
+                  entryTransactions.length > 0 ? "bg-[#137AA8]" : "bg-gray-200"
                 } flex grid grid-cols-4 items-start text-sm  cursor-pointer`}
                 onClick={() => handleOpen(entry?._id)}>
                 <div className="px-2 py-2 border-r border-black h-full">{entry.billNo}</div>
@@ -278,7 +369,7 @@ export default function AccordionUI() {
                 <div className="px-2 py-2 border-r border-black h-full">{entry.party}</div>
                 <div className="main flex justify-end items-center space-x-2 pr-[20px]  mt-2 ">
                   <span className="font-semibold items-center">₹{entry?.pending}</span>
-                  {entry?.Ledger_entries_transaction.length > 0 ? (
+                  {entryTransactions.length > 0 ? (
                     <svg
                       width="24"
                       height="24"
@@ -329,10 +420,10 @@ export default function AccordionUI() {
                   {/* Status Row */}
                   <div className="flex justify-between text-xs">
                     <span className="text-red-600 font-semibold">
-                      Pending: ₹{entry?.pending - entry?.amount}
+                      Pending: ₹{entry?.pending - collectedAmount}
                     </span>
                     <span className="text-green-600 font-semibold">
-                      Collected: ₹{entry?.amount}
+                      Collected: ₹{collectedAmount}
                     </span>
                   </div>
 
@@ -367,11 +458,19 @@ export default function AccordionUI() {
                         </svg>
                       </div>
                     }
-                    amount={entry?.pending}
+                    amount={getTransaction("Cash")?.amount ?? ""}
+                    selected={isSelected("Cash")}
+                    inputType={inputType}
+                    inputName={inputName}
+                    pending={entry?.pending}
                     multi={false}
-                    handleClick={handleClick}
-                    attr={entry?._id}
-                    data={entry?.Ledger_entries_transaction}
+                    handleToggle={(checked) =>
+                      toggleTransaction(entry._id, "Cash", checked, entry?.pending)
+                    }
+                    handleAmountChange={(value) =>
+                      updateTransactionField(entry._id, "Cash", "amount", value, entry?.pending)
+                    }
+                    handleAmountBlur={() => saveTransactionDraft(entry._id)}
                   />
                   <PaymentMethod
                     label="UPI"
@@ -393,11 +492,19 @@ export default function AccordionUI() {
                         </svg>
                       </div>
                     }
-                    amount={entry?.pending}
+                    amount={getTransaction("UPI")?.amount ?? ""}
+                    selected={isSelected("UPI")}
+                    inputType={inputType}
+                    inputName={inputName}
+                    pending={entry?.pending}
                     multi={false}
-                    handleClick={handleClick}
-                    attr={entry?._id}
-                    data={entry?.Ledger_entries_transaction}
+                    handleToggle={(checked) =>
+                      toggleTransaction(entry._id, "UPI", checked, entry?.pending)
+                    }
+                    handleAmountChange={(value) =>
+                      updateTransactionField(entry._id, "UPI", "amount", value, entry?.pending)
+                    }
+                    handleAmountBlur={() => saveTransactionDraft(entry._id)}
                   />
                   <PaymentMethod
                     label="CHEQUE"
@@ -525,21 +632,35 @@ export default function AccordionUI() {
                         </svg>
                       </div>
                     }
-                    amount={entry?.pending}
+                    amount={getTransaction("CHEQUE")?.amount ?? ""}
+                    cheque={getTransaction("CHEQUE")?.cheque ?? ""}
+                    selected={isSelected("CHEQUE")}
+                    inputType={inputType}
+                    inputName={inputName}
+                    pending={entry?.pending}
                     multi={true}
-                    handleClick={handleClick}
-                    attr={entry?._id}
-                    data={entry?.Ledger_entries_transaction}
+                    handleToggle={(checked) =>
+                      toggleTransaction(entry._id, "CHEQUE", checked, entry?.pending)
+                    }
+                    handleAmountChange={(value) =>
+                      updateTransactionField(entry._id, "CHEQUE", "amount", value, entry?.pending)
+                    }
+                    handleAmountBlur={() => saveTransactionDraft(entry._id)}
+                    handleChequeChange={(value) =>
+                      updateTransactionField(entry._id, "CHEQUE", "cheque", value, entry?.pending)
+                    }
+                    handleChequeBlur={() => saveTransactionDraft(entry._id)}
                   />
 
                   {/* Credit & Cancelled */}
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
-                      type="radio"
+                      type={inputType}
+                      name={inputName}
+                      checked={isSelected("credit")}
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry._id, "credit", entry?.pending, null)
+                        toggleTransaction(entry._id, "credit", e.target.checked, entry?.pending)
                       }
-                      name={entry._id}
                     />
                     <span className="flex">
                       <svg
@@ -563,11 +684,12 @@ export default function AccordionUI() {
                   </div>
                   <div className="flex items-center px-2 py-2 bg-white border rounded shadow-md space-x-2">
                     <input
-                      type="radio"
+                      type={inputType}
+                      name={inputName}
+                      checked={isSelected("cancel")}
                       onChange={(e) =>
-                        handleCheck(e.target.checked, entry._id, "cancel", entry?.pending, null)
+                        toggleTransaction(entry._id, "cancel", e.target.checked, entry?.pending)
                       }
-                      name={entry._id}
                     />
                     <span className="flex">
                       <div className="items-right mr-[15px] ml-[20px]">
@@ -584,21 +706,16 @@ export default function AccordionUI() {
                       <div>CANCELLED</div>
                     </span>
                   </div>
-                  <div className="flex items-center justify-center w-full">
-                    <button
-                      className={`flex items-center justify-center w-full ${
-                        entry?.Ledger_entries_transaction.length > 0
-                          ? "bg-[#6f6f6f85]"
-                          : "bg-[#137AA8]"
-                      } text-white px-2 py-2 rounded`}
-                      onClick={() =>
-                        entry?.Ledger_entries_transaction.length === 0 && handleSave(entry?._id)
-                      }>
-                      Done
-                    </button>
-                  </div>
+                  {savingEntries[entry?._id] && (
+                    <div className="text-center text-sm font-medium text-[#137AA8] py-2">
+                      Saving...
+                    </div>
+                  )}
                 </div>
               )}
+                  </>
+                );
+              })()}
             </div>
           ))}
         {completed && (

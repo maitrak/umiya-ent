@@ -1,13 +1,19 @@
 "use client";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import OTPInput from "react-otp-input";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 export default function Report() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const ledgerId = searchParams.get("id");
+  const backHref = ledgerId
+    ? `http://localhost:3001/summary?id=${ledgerId}`
+    : "http://localhost:3001/summary";
 
   const [ledgers, setLedgers] = useState<any>(null);
   const [parties, setParties] = useState<number>(0);
@@ -79,10 +85,27 @@ export default function Report() {
         entry.Ledger_entries_transaction.filter((txn: any) => txn.type === "cancel")
       );
 
-      setUPI(valueForUPI?.length ?? 0);
-      setCancelled(valueForCancel?.[0].amount ?? 0);
-      setCredit(valueForCredit?.[0].amount ?? 0);
-      setCheque(valueForCheque?.[0].amount ?? 0);
+      setUPI(
+        (valueForUPI ?? []).reduce((total: number, transaction: any) => total + transaction.amount, 0)
+      );
+      setCancelled(
+        (valueForCancel ?? []).reduce(
+          (total: number, transaction: any) => total + transaction.amount,
+          0
+        )
+      );
+      setCredit(
+        (valueForCredit ?? []).reduce(
+          (total: number, transaction: any) => total + transaction.amount,
+          0
+        )
+      );
+      setCheque(
+        (valueForCheque ?? []).reduce(
+          (total: number, transaction: any) => total + transaction.amount,
+          0
+        )
+      );
     } catch (err) {
       console.error("Error fetching ledgers:", err);
     }
@@ -118,6 +141,14 @@ export default function Report() {
   return (
     <div className="bg-white font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
+        <div className="px-4 pt-4">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+        </div>
         {/* Date Header */}
         <div className="bg-[#137AA8] text-white text-center py-2 font-semibold text-lg">
           Summary

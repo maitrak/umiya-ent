@@ -1,10 +1,12 @@
 "use client";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useFormikContext } from "formik";
+import { ArrowLeft } from "lucide-react";
 
 const SubmitOnChange = () => {
   const { values, submitForm } = useFormikContext();
@@ -17,6 +19,8 @@ const SubmitOnChange = () => {
 };
 export default function Summary() {
   const searchParams = useSearchParams();
+  const ledgerId = searchParams.get("id");
+  const orderHref = "http://localhost:3001/order";
 
   const [ledgers, setLedgers] = useState<any>(null);
   const [subTotal, setSubTotal] = useState<number>(0);
@@ -70,17 +74,16 @@ export default function Summary() {
         return;
       }
 
-      if (res.data.data?.isGenerated) {
-        const state = { id: id };
-        const params = new URLSearchParams(state).toString();
-        router.push(`/report?${params}`);
-      }
-
       setLedgers(res.data.data);
       setTotal(res.data.data.amount);
-      const sum = res.data.data.Ledger_entries.map((el: any) => {
-        return el.Ledger_entries_transaction[0].amount;
-      }).reduce((total: number, num: number) => total + num, 0);
+      const sum = res.data.data.Ledger_entries.reduce((total: number, entry: any) => {
+        const entryTotal = (entry.Ledger_entries_transaction ?? []).reduce(
+          (transactionTotal: number, transaction: any) =>
+            transactionTotal + Number(transaction.amount ?? 0),
+          0
+        );
+        return total + entryTotal;
+      }, 0);
       setSubTotal(sum);
     } catch (err) {
       console.error("Error fetching ledgers:", err);
@@ -99,9 +102,18 @@ export default function Summary() {
       router.push(`/report?${params}`);
     }
   };
+
   return (
     <div className="bg-white font-sans min-h-screen">
       <div className="max-w-md mx-auto rounded-xl shadow border border-gray-300 overflow-hidden">
+        <div className="px-4 pt-4">
+          <Link
+            href={orderHref}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+        </div>
         {/* Date Header */}
         <div className="bg-[#137AA8] text-white text-center py-2 font-semibold text-lg">
           Summary
